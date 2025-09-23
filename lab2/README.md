@@ -24,7 +24,7 @@ Main.v of Part 1:
   For values `1010–1111` (decimal 10–15), the decoder treats them as **don’t-cares**, since only decimal digits are shown.
   
 -----------------------------------------------------------------------------------
-**Part 2**
+##Part 2
 # Lab Report – Binary-to-Decimal Conversion (Part II)
 
 ## Design Overview
@@ -84,11 +84,11 @@ Main.v of Part 1:
 
 
 -----------------------------------------------------------------------------------
-**Part 3**
+##Part 3  
 
 
 -----------------------------------------------------------------------------------
-**Part 4**
+##Part 4
 ## Design Overview
 
 ### 1. Binary-Coded Decimal (BCD) Representation
@@ -119,7 +119,7 @@ Main.v of Part 1:
     - `HEX1` and `HEX0` → BCD sum `S1S0`
 
 -----------------------------------------------------------------------------------
-**Part 5**
+##Part 5
 
 ## Design Overview
 
