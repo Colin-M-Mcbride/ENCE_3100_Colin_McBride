@@ -70,7 +70,10 @@ Main.v of Part 1:
   - 7-segment displays `HEX1` and `HEX0` show decimal digits `d1` and `d0`.
 - Pin assignments were made for the DE2 board to connect switches and 7-segment displays.
 
+## Images:   
 
+**Main of Part 2:**
+![IMG](img/pt2Code.png)
 
 
 
