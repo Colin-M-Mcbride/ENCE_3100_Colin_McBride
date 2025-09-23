@@ -75,7 +75,13 @@ Main.v of Part 1:
 **Main of Part 2:**  
 ![IMG](img/pt2Code.png)
 
-
+![IMG](img/mux.png)  
+![IMG](img/pt2Code2.png)  
+![IMG](img/pt2Code3.png)  
+![IMG](img/cASim.png)  
+![IMG](img/circuitA.png)
+![IMG](img/cBSim.png)
+![IMG](img/circuitB.png)
 
 ---
 
