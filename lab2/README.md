@@ -1,5 +1,5 @@
 how do I bold text  
-**Lab 2 Report**  
+# Lab 2 Report 
 **Written by Colin McBride**  
 
 Logism Diagram for Part 1:  
