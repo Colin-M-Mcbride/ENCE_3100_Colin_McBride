@@ -25,6 +25,59 @@ Main.v of Part 1:
   
 -----------------------------------------------------------------------------------
 **Part 2**
+# Lab Report – Binary-to-Decimal Conversion (Part II)
+
+## Design Overview
+
+### 1. Binary-to-Decimal Conversion
+- Input: 4-bit binary number `V`.
+- Output: Two decimal digits `D = d1d0`.
+- Example conversion:
+  - Binary `0101` → Decimal `05`
+  - Binary `1111` → Decimal `15`
+- Table of conversions (from lab manual):
+
+| Binary | Decimal |
+|--------|---------|
+| 0000   | 0 0     |
+| 0001   | 0 1     |
+| 0010   | 0 2     |
+| ...    | ...     |
+| 1001   | 0 9     |
+| 1010   | 1 0     |
+| 1011   | 1 1     |
+| 1100   | 1 2     |
+| 1101   | 1 3     |
+| 1110   | 1 4     |
+| 1111   | 1 5     |
+
+### 2. Circuit Components
+- **Comparator:** Detects when `V > 9` to control the tens digit output.
+- **Multiplexers:** Select proper output digits based on comparator.
+- **Circuit A:** Implements combinational logic to generate decimal digits from binary input.
+- **Boolean Logic Implementation:** All logic functions are implemented using `assign` statements; no `if-else` or `case` statements are used.
+
+---
+
+## Implementation Details
+- Verilog module includes:
+  - 4-bit input `V`
+  - 4-bit output `M` (intermediate BCD)
+  - Output `z` (control signal from comparator)
+- Simulation was performed to verify the correct operation of the comparator, multiplexers, and Circuit A.
+- Later augmentation included Circuit B and a 7-segment decoder to display outputs:
+  - Switches `SW3−0` represent binary input `V`.
+  - 7-segment displays `HEX1` and `HEX0` show decimal digits `d1` and `d0`.
+- Pin assignments were made for the DE2 board to connect switches and 7-segment displays.
+
+
+
+
+
+---
+
+
+
 
 
 -----------------------------------------------------------------------------------
@@ -33,7 +86,34 @@ Main.v of Part 1:
 
 -----------------------------------------------------------------------------------
 **Part 4**
+## Design Overview
 
+### 1. Binary-Coded Decimal (BCD) Representation
+- Each decimal digit is represented using 4 bits.
+- Example: decimal 59 → BCD 0101 1001.
+- The largest sum possible in this circuit is `9 + 9 + 1 = 19`.
+
+### 2. Single-Digit BCD Adder
+- Previous parts: 
+  - Uses Circuit B and the Comparator from part 2
+  - Uses a 4-bit adder (from Part III) to produce a 4-bit sum and a carry-out for `A + B + cin`.
+  - A binary-to-BCD converter is applied to the 5-bit result to produce two BCD digits (`S1S0`) similar to the conversion circuit from Part II.
+- **Verilog Implementation:**
+  - The logic is implemented using simple `assign` statements.
+  - Required a revamping of circuit A from part 2 to account for the new maximum number being 18
+
+### 3. Input/Output Mapping
+- **Inputs via switches:**
+  - `SW[3:0]` = BCD digit `B`
+  - `SW[7:4]` = BCD digit `A`
+  - `SW[8]` = carry-in `cin`
+- **Outputs:**
+  - Red LEDs (`LEDR`) reflect the input switch values.
+  - Green LEDs (`LEDG`) display the 4-bit sum and carry-out.
+  - 7-segment displays:
+    - `HEX6` → BCD digit `A`
+    - `HEX4` → BCD digit `B`
+    - `HEX1` and `HEX0` → BCD sum `S1S0`
 
 -----------------------------------------------------------------------------------
 **Part 5**
@@ -55,3 +135,7 @@ Main.v of Part 1:
   - `S2` = carry-out from second adder (`carry1`) representing hundreds digit
  
   
+-----------------------------------------------------------------------------------
+**Sources**
+I used Chat GPT for the formatting of this readme  
+I think it did a good job
