@@ -99,7 +99,7 @@ Main.v of Part 1:
   ##Image of adder implementation:  
   **PT 3 Main:**  
   ![IMG](img/pt3Code.png)
-  **Full Adder:**
+  **Full Adder:**  
   ![IMG](img/pt3Code2.png)
 ### Implementation Details
 - Verilog module `FA` uses **combinational logic only**, implemented with `assign` statements.
