@@ -85,8 +85,26 @@ Main.v of Part 1:
 
 -----------------------------------------------------------------------------------
 #Part 3  
+## Design Overview
 
-
+### Full Adder Logic
+- **Inputs:**
+  - `i_a` – first operand bit
+  - `i_b` – second operand bit
+  - `i_cin` – carry-in bit
+- **Outputs:**
+  - `o_s` – sum bit
+  - `o_cout` – carry-out bit
+ 
+  ##Image of adder implementation:  
+  **PT 3 Main:**  
+  ![IMG](img/pt3Code.png)
+  **Full Adder:**
+  ![IMG](img/pt3Code2.png)
+### Implementation Details
+- Verilog module `FA` uses **combinational logic only**, implemented with `assign` statements.
+- No `always` blocks or sequential logic are used.
+- The module uses `default_nettype none` to enforce explicit wire declarations for safety and clarity.
 -----------------------------------------------------------------------------------
 #Part 4
 ## Design Overview
