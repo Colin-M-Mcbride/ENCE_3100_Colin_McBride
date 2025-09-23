@@ -72,7 +72,7 @@ Main.v of Part 1:
 
 ## Images:   
 
-**Main of Part 2:**
+**Main of Part 2:**  
 ![IMG](img/pt2Code.png)
 
 
