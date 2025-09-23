@@ -24,3 +24,28 @@ Main.v of Part 1:
   For values `1010–1111` (decimal 10–15), the decoder treats them as **don’t-cares**, since only decimal digits are shown.
   
 -----------------------------------------------------------------------------------
+Some cool ASCII art chat GPT Made:
+## Block Diagram
+
+   +-------+         +------------+         +-----+
+
+SW ----> Adder +---------> Comparator +---------> Mux +----+
++-------+ +------------+ +-----+ |
+| ^ |
+| | |
+v | |
++-------------+ | |
+| Circuit A v2|<---------------------------+ |
++-------------+ |
+| |
+v v
++-------------+ +-------------+
+| 7-Seg Dec |----------------------------->| HEX Display |
++-------------+ +-------------+
+
+- **Adder**: Produces raw sum (0–18).  
+- **Comparator**: Checks if sum ≥ 10.  
+- **Mux**: Chooses between raw sum or corrected output.  
+- **Circuit A v2**: Subtracts 10 when sum is ≥ 10.  
+- **7-Seg Decoder**: Converts 4-bit binary into LED segments.  
+- **HEX Display**: Final output for the user.  
