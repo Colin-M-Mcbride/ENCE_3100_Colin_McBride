@@ -1,21 +1,4 @@
 # Lab 3 – Latches, Flip-Flops, and Registers
-**Course:** ENCE 3100  
-**Name:** *Your Name*  
-**Date:** *Date*  
-
----
-
-## Purpose
-The purpose of this lab is to explore how latches and flip-flops operate and how they can be described in Verilog. We implemented RS latches, D latches, master–slave flip-flops, and registers, and then verified them using simulation and on the DE2 board.
-
----
-
-## Objectives
-1. Implement and simulate a gated RS latch.  
-2. Design and test a gated D latch.  
-3. Construct a master–slave D flip-flop.  
-4. Compare gated latches with positive- and negative-edge triggered flip-flops.  
-5. Build a register with 7-segment displays for stored vs. current values.  
 
 ---
 
@@ -23,12 +6,9 @@ The purpose of this lab is to explore how latches and flip-flops operate and how
 **Code:**  
 ![Part I Code](img/p1code.png)  
 
-**Simulation Waveform:**  
-![Part I Waveform](img/p1wave.png)  
-
 **Observation:**  
-- Output Q follows S and R only when clock = 1.  
-- Invalid state occurs when both S and R are high.  
+- Output `Q` changes only when the clock input is high.  
+- Invalid state occurs when both `S` and `R` are high.  
 
 ---
 
@@ -36,12 +16,9 @@ The purpose of this lab is to explore how latches and flip-flops operate and how
 **Code:**  
 ![Part II Code](img/p2code.png)  
 
-**Simulation Waveform:**  
-![Part II Waveform](img/p2wave.png)  
-
 **Observation:**  
-- Transparent when Clk = 1.  
-- Holds value when Clk = 0.  
+- Transparent when `Clk = 1`.  
+- Holds its value when `Clk = 0`.  
 
 ---
 
@@ -49,11 +26,8 @@ The purpose of this lab is to explore how latches and flip-flops operate and how
 **Code:**  
 ![Part III Code](img/p3code.png)  
 
-**Simulation Waveform:**  
-![Part III Waveform](img/p3wave.png)  
-
 **Observation:**  
-- Output changes only on clock edges.  
+- Output updates only on clock edges.  
 - Demonstrates edge-triggered behavior.  
 
 ---
@@ -62,13 +36,10 @@ The purpose of this lab is to explore how latches and flip-flops operate and how
 **Code:**  
 ![Part IV Code](img/p4code.png)  
 
-**Simulation Waveform:**  
-![Part IV Waveform](img/p4wave.png)  
-
 **Observation:**  
-- Latch is transparent during high clock.  
-- Pos-edge FF updates on rising edge.  
-- Neg-edge FF updates on falling edge.  
+- Behavioral latch is transparent while `Clk = 1`.  
+- Positive-edge FF updates on rising edge.  
+- Negative-edge FF updates on falling edge.  
 
 ---
 
@@ -77,20 +48,19 @@ The purpose of this lab is to explore how latches and flip-flops operate and how
 ![Part V Code](img/p5code.png)  
 
 **Board Test:**  
-- Switches (SW) load the B value.  
-- Pressing KEY1 stores A.  
-- HEX7–4 show A, HEX3–0 show B.  
+- Switches (`SW`) select the B value.  
+- Pressing `KEY1` stores A into the register.  
+- `KEY0` resets the stored value.  
+- HEX7–HEX4 show stored A, HEX3–HEX0 show current switches (B).  
 
 ---
 
 ## Results
-- All designs simulated correctly.  
-- Latches and flip-flops worked as expected.  
-- Register stored and displayed values properly.  
+- RS latch, D latch, and master–slave flip-flop all worked as expected.  
+- Behavioral latch and edge-triggered flip-flops synthesized correctly on the FPGA.  
+- Register successfully stored values and displayed them on the 7-segment LEDs.  
 
 ---
 
 ## Conclusion
-This lab highlighted the differences between latches and flip-flops, and demonstrated how storage elements are used in practical designs. The project reinforced the importance of clocking and edge sensitivity in sequential circuits.
-
-
+This lab demonstrated how latches and flip-flops differ in operation, and how storage elements can be applied in practical digital systems. Implementing them in both gate-level and behavioral Verilog gave insight into synthesis results and FPGA hardware behavior.
