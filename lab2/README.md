@@ -1,127 +1,178 @@
-# Lab 3 Report  
+# Lab 2 Report 
 **Written by Colin McBride**  
 
------------------------------------------------------------------------------------
-# Part 1  
+---
+
+Logism Diagram for Part 1:  
+![IMG](img/pt1Sim.png)
 
 Main.v of Part 1:  
-![IMG](img/p1code.png)  
+![IMG](img/pt1Code.png)  
+
+7 Segment Decoder code:  
+![IMG](img/pt1Code2.png)  
 
 - **Purpose:**  
-  Implement a gated RS latch using logic gates in Verilog.  
+  Converts a 4-bit binary input into the 7-segment display pattern needed to light up digits `0–9`.
 
 - **Inputs:**  
-  - `Clk` – Clock signal  
-  - `S` – Set input  
-  - `R` – Reset input  
+  - `i_m3, i_m2, i_m1, i_m0` → 4-bit binary input (most significant bit first).
 
 - **Outputs:**  
-  - `Q` – Latch output  
+  - `o_seg[7:0]` → The signals that control each LED segment (a–g, and sometimes DP).
 
 - **Operation:**  
-  - When `Clk = 1`, `Q` follows the inputs `S` and `R`.  
-  - When `Clk = 0`, the latch holds its previous value.  
-  - The state where `S = 1` and `R = 1` is invalid.  
-
+  Implements Boolean equations that map binary numbers `0000–1001` (decimal 0–9) into the correct LED on/off pattern.  
+  For values `1010–1111` (decimal 10–15), the decoder treats them as **don’t-cares**, since only decimal digits are shown.
+  
 -----------------------------------------------------------------------------------
 # Part 2  
+# Lab Report – Binary-to-Decimal Conversion (Part II)
 
-Main.v of Part 2:  
-![IMG](img/p2code.png)  
+## Design Overview
 
-- **Purpose:**  
-  Implement a gated D latch using Verilog.  
+### 1. Binary-to-Decimal Conversion
+- **Input:** 4-bit binary number `V`.  
+- **Output:** Two decimal digits `D = d1d0`.  
+- **Example conversion:**  
+  - Binary `0101` → Decimal `05`  
+  - Binary `1111` → Decimal `15`  
 
-- **Inputs:**  
-  - `D` – Data input  
-  - `Clk` – Clock signal  
+- **Table of conversions (from lab manual):**
 
-- **Outputs:**  
-  - `Q` – Latch output  
+| Binary | Decimal |
+|--------|---------|
+| 0000   | 0 0     |
+| 0001   | 0 1     |
+| 0010   | 0 2     |
+| ...    | ...     |
+| 1001   | 0 9     |
+| 1010   | 1 0     |
+| 1011   | 1 1     |
+| 1100   | 1 2     |
+| 1101   | 1 3     |
+| 1110   | 1 4     |
+| 1111   | 1 5     |
 
-- **Operation:**  
-  - When `Clk = 1`, the latch is transparent (`Q = D`).  
-  - When `Clk = 0`, the output `Q` holds the last value.  
-  - Uses `S = D` and `R = ~D` internally to drive an RS latch.  
+### 2. Circuit Components
+- **Comparator:** Detects when `V > 9` to control the tens digit output.  
+- **Multiplexers:** Select proper output digits based on comparator.  
+- **Circuit A:** Implements combinational logic to generate decimal digits from binary input.  
+- **Boolean Logic Implementation:** All logic functions are implemented using `assign` statements; no `if-else` or `case` statements are used.  
+
+---
+
+## Implementation Details
+- Verilog module includes:  
+  - 4-bit input `V`  
+  - 4-bit output `M` (intermediate BCD)  
+  - Output `z` (control signal from comparator)  
+
+- Simulation was performed to verify the correct operation of the comparator, multiplexers, and Circuit A.  
+
+- Later augmentation included Circuit B and a 7-segment decoder to display outputs:  
+  - Switches `SW3−0` represent binary input `V`.  
+  - 7-segment displays `HEX1` and `HEX0` show decimal digits `d1` and `d0`.  
+
+- Pin assignments were made for the DE2 board to connect switches and 7-segment displays.  
+
+## Images:   
+
+**Main of Part 2:**  
+![IMG](img/pt2Code.png)
+
+![IMG](img/mux.png)  
+![IMG](img/pt2Code2.png)  
+![IMG](img/pt2Code3.png)  
+![IMG](img/cASim.png)  
+![IMG](img/circuitA.png)  
+![IMG](img/cBSim.png)  
+![IMG](img/circuitB.png)  
+
+---
 
 -----------------------------------------------------------------------------------
 # Part 3  
 
-Main.v of Part 3:  
-![IMG](img/p3code.png)  
+## Design Overview
 
-- **Purpose:**  
-  Build a Master–Slave D flip-flop using two gated D latches.  
-
+### Full Adder Logic
 - **Inputs:**  
-  - `D` – Data input  
-  - `Clk` – Clock signal  
+  - `i_a` – first operand bit  
+  - `i_b` – second operand bit  
+  - `i_cin` – carry-in bit  
 
 - **Outputs:**  
-  - `Q` – Flip-flop output  
+  - `o_s` – sum bit  
+  - `o_cout` – carry-out bit  
 
-- **Operation:**  
-  - The master latch is enabled when `Clk = 1`.  
-  - The slave latch is enabled when `Clk = 0`.  
-  - Together, this forms an edge-triggered flip-flop that updates only on the clock’s rising edge.  
+## Image of adder implementation:  
+**PT 3 Main:**  
+![IMG](img/pt3Code.png)  
+
+**Full Adder:**  
+![IMG](img/pt3Code2.png)  
+
+### Implementation Details
+- Verilog module `FA` uses **combinational logic only**, implemented with `assign` statements.  
+- No `always` blocks or sequential logic are used.  
+- The module uses `default_nettype none` to enforce explicit wire declarations for safety and clarity.  
 
 -----------------------------------------------------------------------------------
 # Part 4  
 
-Main.v of Part 4:  
-![IMG](img/p4code.png)  
+## Design Overview
 
-- **Purpose:**  
-  Compare a gated D latch with positive-edge and negative-edge triggered flip-flops.  
+### 1. Binary-Coded Decimal (BCD) Representation
+- Each decimal digit is represented using 4 bits.  
+- Example: decimal 59 → BCD 0101 1001.  
+- The largest sum possible in this circuit is `9 + 9 + 1 = 19`.  
 
-- **Inputs:**  
-  - `D` – Data input  
-  - `Clk` – Clock signal  
-  - `reset_n` – Active-low reset  
+### 2. Single-Digit BCD Adder
+- Previous parts:  
+  - Uses Circuit B and the Comparator from Part 2  
+  - Uses a 4-bit adder (from Part III) to produce a 4-bit sum and a carry-out for `A + B + cin`.  
+  - A binary-to-BCD converter is applied to the 5-bit result to produce two BCD digits (`S1S0`).  
+
+- **Verilog Implementation:**  
+  - The logic is implemented using simple `assign` statements.  
+  - Required revamping Circuit A from Part 2 to account for the new maximum number being 18.  
+
+### 3. Input/Output Mapping
+- **Inputs via switches:**  
+  - `SW[3:0]` = BCD digit `B`  
+  - `SW[7:4]` = BCD digit `A`  
+  - `SW[8]` = carry-in `cin`  
 
 - **Outputs:**  
-  - `Q_latch` – Behavioral gated D latch output  
-  - `Q_pos` – Positive-edge D flip-flop output  
-  - `Q_neg` – Negative-edge D flip-flop output  
-
-- **Operation:**  
-  - **Latch:** Transparent when `Clk = 1`.  
-  - **Pos-edge FF:** Updates `Q` on the rising edge of the clock.  
-  - **Neg-edge FF:** Updates `Q` on the falling edge of the clock.  
+  - Red LEDs (`LEDR`) reflect the input switch values.  
+  - Green LEDs (`LEDG`) display the 4-bit sum and carry-out.  
+  - 7-segment displays:  
+    - `HEX6` → BCD digit `A`  
+    - `HEX4` → BCD digit `B`  
+    - `HEX1` and `HEX0` → BCD sum `S1S0`  
 
 -----------------------------------------------------------------------------------
 # Part 5  
 
-Main.v of Part 5:  
-![IMG](img/p5code.png)  
+## Design Overview
 
-- **Purpose:**  
-  Implement a 16-bit register and 7-segment display system on the DE2 board.  
+### 1. Single-Digit BCD Adder (Part IV Module)
+- **`adder_4bit`**: Adds two 4-bit BCD numbers, outputs a 4-bit sum and a carry-out.  
+- **`bin_to_dec_v2`**: Converts a 4-bit BCD sum (plus carry) to 7-segment display signals.  
+- **`checkBCD`**: Verifies valid BCD inputs and signals errors via LEDs.  
 
-- **Inputs:**  
-  - `SW[15:0]` – Switches for input values  
-  - `KEY1` – Clock input (store operation)  
-  - `KEY0` – Active-low reset  
+### 2. Two-Digit BCD Adder (Top-Level Design)
+- Two instances of the single-digit adder are instantiated hierarchically:  
+  - **Least Significant Digit (A0 + B0):** First adder takes lower 4 bits of `A` and `B`, with carry-in = 0. Produces `sum0` and `carry0`.  
+  - **Most Significant Digit (A1 + B1):** Second adder takes upper 4 bits of `A` and a fixed `B1 = 4'b1111` (board limitation). Adds `carry0` to produce `sum1` and `carry1`.  
 
-- **Outputs:**  
-  - `HEX7–HEX4` – Stored value `A`  
-  - `HEX3–HEX0` – Current switch value `B`  
-
-- **Operation:**  
-  - First, set the switches to a value for A.  
-  - Press `KEY1` to store this value into the register.  
-  - The stored value is displayed on HEX7–HEX4.  
-  - Current switch values (B) are shown on HEX3–HEX0.  
-  - Pressing `KEY0` resets the stored register.  
+- **Three-digit sum `S2S1S0`:**  
+  - `S0` = least significant sum (`sum0`)  
+  - `S1` = most significant sum (`sum1`)  
+  - `S2` = carry-out from second adder (`carry1`) representing hundreds digit  
 
 -----------------------------------------------------------------------------------
-# Results  
-
-- The RS latch, gated D latch, and master–slave flip-flop worked as expected.  
-- The gated latch, pos-edge flip-flop, and neg-edge flip-flop all showed their distinct behaviors.  
-- The register correctly stored switch inputs and displayed them separately from the current values.  
-
------------------------------------------------------------------------------------
-# Conclusion  
-
-This lab reinforced the differences between **latches** (level-sensitive) and **flip-flops** (edge-sensitive). Gate-level implementations showed how storage can be built from simple logic, while behavioral Verilog mapped directly to FPGA flip-flop resources. The final register and 7-segment system demonstrated a practical use of storage elements in a digital circuit.  
+**Sources**  
+I used Chat GPT for the formatting of this readme.  
+I think it did a good job.  
