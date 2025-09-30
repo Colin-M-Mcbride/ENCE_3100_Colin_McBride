@@ -5,7 +5,7 @@
 # Part 1  
 
 Code of Part 1:  
-![IMG](img/p1code.png)  
+![IMG](img/p1code.PNG)  
 
 - **Purpose:**  
   Implement a gated RS latch using logic gates in Verilog.  
