@@ -95,8 +95,8 @@ Code of Part 4:
 # Part 5  
 
 Code of Part 5:  
-![IMG](img/p5code.PNG)  
-![IMG](img/p5code.PNG) 
+![IMG](img/p5code1.PNG)  
+![IMG](img/p5code2.PNG) 
 
 - **Purpose:**  
   Implement a 16-bit register and 7-segment display system on the DE2 board.  
