@@ -4,7 +4,7 @@
 -----------------------------------------------------------------------------------
 # Part 1  
 
-Main.v of Part 1:  
+Code of Part 1:  
 ![IMG](img/p1code.png)  
 
 - **Purpose:**  
@@ -26,9 +26,9 @@ Main.v of Part 1:
 -----------------------------------------------------------------------------------
 # Part 2  
 
-Main.v of Part 2:  
-![IMG](img/p2code.png)  
-
+Code of Part 2:  
+![IMG](img/p2code1.png)  
+![IMG](img/p2code1.png) 
 - **Purpose:**  
   Implement a gated D latch using Verilog.  
 
@@ -47,7 +47,7 @@ Main.v of Part 2:
 -----------------------------------------------------------------------------------
 # Part 3  
 
-Main.v of Part 3:  
+Code of Part 3:  
 ![IMG](img/p3code.png)  
 
 - **Purpose:**  
@@ -68,9 +68,12 @@ Main.v of Part 3:
 -----------------------------------------------------------------------------------
 # Part 4  
 
-Main.v of Part 4:  
-![IMG](img/p4code.png)  
-
+Code of Part 4:  
+![IMG](img/p4code1.png)
+![IMG](img/p4code2.png)
+![IMG](img/p4code3.png)
+![IMG](img/p4code4.png)
+![IMG](img/p4code5.png)
 - **Purpose:**  
   Compare a gated D latch with positive-edge and negative-edge triggered flip-flops.  
 
@@ -92,8 +95,9 @@ Main.v of Part 4:
 -----------------------------------------------------------------------------------
 # Part 5  
 
-Main.v of Part 5:  
+Code of Part 5:  
 ![IMG](img/p5code.png)  
+![IMG](img/p5code.png) 
 
 - **Purpose:**  
   Implement a 16-bit register and 7-segment display system on the DE2 board.  
