@@ -69,11 +69,11 @@ Code of Part 3:
 # Part 4  
 
 Code of Part 4:  
-![IMG](img/p4code1.png)
-![IMG](img/p4code2.png)
-![IMG](img/p4code3.png)
-![IMG](img/p4code4.png)
-![IMG](img/p4code5.png)
+![IMG](img/p4code1.png)  
+![IMG](img/p4code2.png)  
+![IMG](img/p4code3.png)  
+![IMG](img/p4code4.png)  
+![IMG](img/p4code5.png)  
 - **Purpose:**  
   Compare a gated D latch with positive-edge and negative-edge triggered flip-flops.  
 
