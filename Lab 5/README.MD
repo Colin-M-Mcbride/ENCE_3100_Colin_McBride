@@ -5,7 +5,7 @@ Colin McBride
 ## Part 1:  
 ## Part 2: 
 ## Part 3:
-![img]multiply.PNG
+![IMG](img/multiply.PNG)
 ## Part 4: 
 
 
