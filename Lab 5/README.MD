@@ -1,7 +1,9 @@
 Here we go again
 
 ### Part 1:  
-
+### Part 1: 
+### Part 1:
+### Part 1: 
 What went wrong. 
 pt 1: In correct output types 
 
