@@ -5,7 +5,8 @@ Colin McBride
 ## Part 1:  
 ## Part 2: 
 ## Part 3:
-**An array multiplier circuit:**
+<p align="center">**An array multiplier circuit:**</p>
+
 ![IMG](img/multiply.PNG)
 
 
