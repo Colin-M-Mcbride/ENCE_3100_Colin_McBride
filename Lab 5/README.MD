@@ -1,4 +1,4 @@
-Here we go again
+
 #### ENCE 3100 Lab 5
 Colin McBride
   
