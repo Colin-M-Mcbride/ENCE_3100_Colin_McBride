@@ -1,7 +1,7 @@
 Here we go again
-### ENCE 3100
-### Lab 5
-### Colin McBride
+#### ENCE 3100
+#### Lab 5
+#### Colin McBride
 
 ## Part 1:  
 ## Part 2: 
