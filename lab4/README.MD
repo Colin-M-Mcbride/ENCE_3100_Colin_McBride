@@ -10,7 +10,7 @@
 
 This lab focused on creating several types of counters in Verilog and comparing how they’re implemented and synthesized.  
 It moved from structural flip-flop designs to behavioral and parameterized designs, ending with display control on the DE2 board.  
-Also I got lazy and learned I can just format the code in here
+Also I got lazy and learned I can just format the code in here.
 
 ---
 
@@ -247,5 +247,5 @@ The final parts applied timing control to create visible, time-based outputs usi
 - `counter_16bit_LPM.v`  
 - `flash_digits.v`  
 - `hello_ticker.v`  
-- (optional) `main.v` for testing multiple parts
+- (provided) `main.v` for testing multiple parts
 
