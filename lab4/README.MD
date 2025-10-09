@@ -10,7 +10,8 @@
 ## Overview
 
 This lab focused on creating several types of counters in Verilog and comparing how they’re implemented and synthesized.  
-It moved from structural flip-flop designs to behavioral and parameterized designs, ending with display control on the DE2 board.
+It moved from structural flip-flop designs to behavioral and parameterized designs, ending with display control on the DE2 board.  
+Also I got lazy and learned I can just format the code in here
 
 ---
 
