@@ -235,8 +235,8 @@ endmodule
 
 This lab demonstrated multiple ways to implement counters in Verilog.  
 The structural T flip-flop design provides a good understanding of internal logic, while the behavioral and LPM approaches are faster and more efficient for real projects.  
-The final parts applied timing control to create visible, time-based outputs using the DE2’s 7-segment displays.
-
+The final parts applied timing control to create visible, time-based outputs using the DE2’s 7-segment displays.  
+Also if permitted I'll keep uploading code this way. 
 ---
 
 ## Files Created
