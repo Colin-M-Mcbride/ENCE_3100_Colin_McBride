@@ -2,8 +2,7 @@
 
 **Name:** Colin McBride  
 **Course:** ENCE 3100  
-**Board:** Altera DE2-Series FPGA  
-**Date:** (Insert Date)
+**Date:** 10/6
 
 ---
 
