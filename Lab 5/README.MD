@@ -3,6 +3,7 @@
 Colin McBride
   
 ## Part 1:  
+
 ## Part 2: 
 ## Part 3:
 <p align="center">**An array multiplier circuit:**</p>
