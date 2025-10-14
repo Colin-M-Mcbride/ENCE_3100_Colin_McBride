@@ -8,7 +8,7 @@
 *pt 1 code (start/pause, player switch, counters)*  
 *gif of functional clock*
 **^^^MANDATORY^^^**  
-**Below is for the love of the game  
+**Below is for the love of the game**  
 *pt2 upgrades*  
 *ascii art of new block diagram*  
 *gif of pt clock*
