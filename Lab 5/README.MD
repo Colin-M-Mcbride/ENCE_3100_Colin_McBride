@@ -156,6 +156,8 @@ endmodule
 
 `default_nettype wire
 ```
+Nightmare to make
+*gif of working multiplier*  
 
 ## Part 4: 
 
