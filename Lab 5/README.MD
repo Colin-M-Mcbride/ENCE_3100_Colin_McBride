@@ -37,7 +37,54 @@ Main of part 1
 	seg7Decoder SEG_T (w_T, HEX1);
 	seg7Decoder SEG_H (w_H, HEX2);
 ```  
+*text blurb*  
+```verilog
+module accumulator_8bit(
+	input 	[7:0] i_A,
+	input 			i_clk,
+	input				i_rst,
+	output 			o_overflow,
+	output 	[7:0] o_S
+);
+
+
+	wire [7:0] w_A;
+	wire w_overflow;
+	wire [7:0] w_S;
+
+	reg_nbit #(.N(8)) REG0
+	(
+	i_A,
+	i_clk,
+	i_rst,
+	w_A
+	);
+	
+
+	// 8bit ALU
+	// Now we accumulate
+	assign {w_overflow, w_S} = w_A + o_S;
+	
+	// 1bit Register
+	reg_nbit #(.N(1)) REG1
+	(
+	w_overflow,
+	i_clk,
+	i_rst,
+	o_overflow
+	);
+	// 8bit Register
+	reg_nbit #(.N(8)) REG2
+	(
+	w_S,
+	i_clk,
+	i_rst,
+	o_S
+	);
+endmodule
+```
 ## Part 2: 
+Main of part 2:
 ## Part 3:
 <p align="center">**An array multiplier circuit:**</p>
 
