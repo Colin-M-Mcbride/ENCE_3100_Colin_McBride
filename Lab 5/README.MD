@@ -90,6 +90,72 @@ Main of part 2:
 
 ![IMG](img/multiply.PNG)
 
+```verilog
+`default_nettype none
+
+module multiplier_4x4(
+    input  [3:0] i_A,
+    input  [3:0] i_B,
+    output [7:0] o_P,
+    output       o_Overflow
+);
+
+    // Partial products
+    wire a0b0 = i_A[0] & i_B[0];
+    wire a1b0 = i_A[1] & i_B[0];
+    wire a2b0 = i_A[2] & i_B[0];
+    wire a3b0 = i_A[3] & i_B[0];
+
+    wire a0b1 = i_A[0] & i_B[1];
+    wire a1b1 = i_A[1] & i_B[1];
+    wire a2b1 = i_A[2] & i_B[1];
+    wire a3b1 = i_A[3] & i_B[1];
+
+    wire a0b2 = i_A[0] & i_B[2];
+    wire a1b2 = i_A[1] & i_B[2];
+    wire a2b2 = i_A[2] & i_B[2];
+    wire a3b2 = i_A[3] & i_B[2];
+
+    wire a0b3 = i_A[0] & i_B[3];
+    wire a1b3 = i_A[1] & i_B[3];
+    wire a2b3 = i_A[2] & i_B[3];
+    wire a3b3 = i_A[3] & i_B[3];
+
+    // Internal wires
+    wire s12, c12, s13, c13, s14, c14;
+    wire s22, c22, s23, c23, s24, c24;
+    wire s32, c32, s33, c33, s34, c34;
+	 wire c11, c21, c31; 
+    // Row 1
+    assign o_P[0] = a0b0;
+    FullAdder fa11(.i_a(a1b0), .i_b(a0b1), .i_cin(1'b0), .o_sum(o_P[1]), .o_cout(c12));
+    FullAdder fa12(.i_a(a2b0), .i_b(a1b1), .i_cin(c12), .o_sum(s12), .o_cout(c13));
+    FullAdder fa13(.i_a(a3b0), .i_b(a2b1), .i_cin(c13), .o_sum(s13), .o_cout(c14));
+    FullAdder fa14(.i_a(1'b0), .i_b(a3b1), .i_cin(c14), .o_sum(s14), .o_cout(c11)); // c14 cascades
+
+    // Row 2
+    FullAdder fa21(.i_a(s12), .i_b(a0b2), .i_cin(1'b0), .o_sum(o_P[2]), .o_cout(c22)); // fixed cin
+    FullAdder fa22(.i_a(s13), .i_b(a1b2), .i_cin(c22), .o_sum(s22), .o_cout(c23));
+    FullAdder fa23(.i_a(s14), .i_b(a2b2), .i_cin(c23), .o_sum(s23), .o_cout(c24));
+    FullAdder fa24(.i_a(c11), .i_b(a3b2), .i_cin(c24), .o_sum(s24), .o_cout(c21)); // carry cascades
+
+    // Row 3
+    FullAdder fa31(.i_a(s22), .i_b(a0b3), .i_cin(1'b0), .o_sum(o_P[3]), .o_cout(c32)); // fixed cin
+    FullAdder fa32(.i_a(s23), .i_b(a1b3), .i_cin(c32), .o_sum(s32), .o_cout(c33));
+    FullAdder fa33(.i_a(s24), .i_b(a2b3), .i_cin(c33), .o_sum(s33), .o_cout(c34));
+    FullAdder fa34(.i_a(c21), .i_b(a3b3), .i_cin(c34), .o_sum(s34), .o_cout(o_P[7]));
+
+    // Output assembly
+    assign o_P[4] = s32;
+    assign o_P[5] = s33;
+    assign o_P[6] = s34;
+    //assign o_P[7] = c34; // final carry
+    assign o_Overflow = 1'b0;
+
+endmodule
+
+`default_nettype wire
+```
 
 ## Part 4: 
 
