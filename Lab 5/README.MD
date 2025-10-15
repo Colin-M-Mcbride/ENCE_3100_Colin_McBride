@@ -125,8 +125,7 @@ Main of part 2:
 
 main of part 3:
 ```verilog
-//******************
-	
+	//******************
 	// Part III
 	//******************	
 
@@ -161,7 +160,7 @@ main of part 3:
 	seg7Decoder SEG_O (w_O, HEX0);
 	seg7Decoder SEG_T (w_T, HEX1);
 	seg7Decoder SEG_H (w_H, HEX2);
-	```
+```
 
 <p align="center">**An array multiplier circuit:**</p>
 
