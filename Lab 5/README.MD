@@ -123,7 +123,8 @@ Main of part 2:
 
 ## Part 3:
 
-main of part 3:
+main of part 3:  
+
 ```verilog
 	//******************
 	// Part III
