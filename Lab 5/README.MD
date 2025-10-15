@@ -86,6 +86,44 @@ endmodule
 ## Part 2: 
 Main of part 2:
 ## Part 3:
+
+main of part 3:
+```verilog
+// Part II
+	//******************
+
+	
+	wire [7:0] w_sum;
+	
+	// ALU - add and sub
+	accumulator_sub_8bit Acc__sub_8bit(
+		.i_A(SW[7:0]),  		//8bit
+		.i_addsub(SW[8]), 	// 1 - sub / 0 - add
+		.i_clk(w_myClk),
+		.i_rst(SW[9]),
+		.o_overflow(LEDR[8]),
+		.o_S(w_sum) 			//8bit
+	);
+	
+	assign LEDR[7:0] = w_sum;
+	
+	// Display result in BCD
+	
+	wire [3:0] w_O, w_T, w_H;
+	
+	bin8_to_bcd u_b2b (
+    .bin(w_sum),
+    .bcd_hundreds(w_H),
+    .bcd_tens(w_T),
+    .bcd_ones(w_O)
+	);
+	
+	// BCD to HEX decoders
+	seg7Decoder SEG_O (w_O, HEX0);
+	seg7Decoder SEG_T (w_T, HEX1);
+	seg7Decoder SEG_H (w_H, HEX2);
+	```
+
 <p align="center">**An array multiplier circuit:**</p>
 
 ![IMG](img/multiply.PNG)
