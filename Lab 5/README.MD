@@ -124,7 +124,44 @@ Main of part 2:
 ## Part 3:
 
 main of part 3:
+```verilog
+//******************
+	
+	// Part III
+	//******************	
 
+	
+	assign HEX3 = 8'b11111111;  // B
+	seg7Decoder SEG_A (SW[3:0], HEX4);  // A
+	seg7Decoder SEG_B (SW[7:4], HEX5);  // B
+	
+	wire [7:0] w_Product;
+	
+	multiplier_4x4 MT_4by4 (
+		.i_A(SW[3:0]),  // 4bits
+		.i_B(SW[7:4]),  // 4bits
+		.o_P(w_Product),  // 8bits
+		.o_Overflow(LEDR[8])
+	);
+	
+	assign LEDR[7:0] = w_Product;
+	
+	// Display result in BCD
+	
+	wire [3:0] w_O, w_T, w_H;
+	
+	bin8_to_bcd u_b2b (
+    .bin(w_Product),
+    .bcd_hundreds(w_H),
+    .bcd_tens(w_T),
+    .bcd_ones(w_O)
+	);
+	
+	// BCD to HEX decoders
+	seg7Decoder SEG_O (w_O, HEX0);
+	seg7Decoder SEG_T (w_T, HEX1);
+	seg7Decoder SEG_H (w_H, HEX2);
+	```
 
 <p align="center">**An array multiplier circuit:**</p>
 
