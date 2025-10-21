@@ -88,7 +88,9 @@ When the start button is pressed from either PAUSE state, the system checks SW1 
 - **COUNTER2 ACTIVE** if SW1=1
 
 This allows the user to switch between counters by toggling SW1 before pressing the start button to resume.
-*gif of functional clock*  
+*gif of functional clock* 
+*code*
+*explanation of code*
 **^^^MANDATORY^^^**  
 **Below is for the love of the game**  
 *pt2 upgrades*  
