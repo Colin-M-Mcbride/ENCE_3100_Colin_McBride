@@ -3,7 +3,7 @@
 
 *Explaination of ideas*
      
-*ascii art of block diagram*  
+ 
 ### State Machine Diagram
 ```
                                     ┌──────────────┐
