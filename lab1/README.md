@@ -1,3 +1,17 @@
-Lab 1 report goes here.
-All images should be stored in a img folder in their respective labs. 
-Screen to GIF for screen recordings. 
+## Lab 1  
+
+
+
+
+# Part 4  
+| c₂ | c₁ | c₀ | Character |
+|----|----|----|-----------|
+| 0  | 0  | 0  | H         |
+| 0  | 0  | 1  | E         |
+| 0  | 1  | 0  | L         |
+| 0  | 1  | 1  | O         |
+| 1  | 0  | 0  | blank     |
+| 1  | 0  | 1  | blank     |
+| 1  | 1  | 0  | blank     |
+| 1  | 1  | 1  | blank     |
+
