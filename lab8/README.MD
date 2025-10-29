@@ -39,7 +39,7 @@ endmodule
 ```  
 ### Logisim of the ALU:  
 ![IMG](img/ALU.PNG)  
-### Code for the Accumulator A:
+### Code for Accumulator A:
 ```verilog
 `default_nettype none
 
@@ -76,7 +76,7 @@ endmodule
 
 `default_nettype wire
 ```  
-### Code for Accumulator B
+### Code for Accumulator B:
 ```verilog 
 `default_nettype none
 
@@ -103,7 +103,9 @@ module Accumulator_B #
 		
 endmodule
 
-`default_nettype wire```  
+`default_nettype wire
+```  
+
 ### ROM:
 Given the artifical constraint of the BUS being only 4 bits a system is needed to break down the 8 bits outputed by the program memory. We can break the 8 bit into two 4 bit with the first being instruction and the secon being data. The 6 operations this VSM uses are in the table below.
 **ROM Table**
