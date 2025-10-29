@@ -79,11 +79,11 @@ endmodule
 ### ROM:
 
 **ROM Table**
-|Binary|ASM|Operation|
+|Binary|Operation||
 |---|---|---|
-|0000|   |NOP|
-|0001|   |ADD|
-|0010|   |SUB|
-|0011|   |OUT|
-|0100|   |IN|
-|0101|   |LDA|
+|0000|NOP|No Operation|
+|0001|ADD|Adds the values of A and B|
+|0010|SUB|Subtracts the values of A and B|
+|0011|OUT|Out puts the value of A|
+|0100|IN|Takes a given input of a User|
+|0101|LDA|Loads a value into Accumulator A|
