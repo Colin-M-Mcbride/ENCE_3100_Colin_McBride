@@ -97,7 +97,7 @@ stateDiagram-v2
     ExecuteA --> ExecuteB: clk
     ExecuteB --> Fetch: clk
 ```
-```LaTeX
+$$$
 \title{Proof 5}
 \author{Colin McBride}
 \date{October 2025}
@@ -136,4 +136,4 @@ In all cases, the remainder when $x^2$ is divided by $8$ is either $0$, $1$, or 
 
 \end{document}
 
-```
+$$$
