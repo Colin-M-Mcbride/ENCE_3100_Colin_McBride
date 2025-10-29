@@ -1,4 +1,4 @@
-## Lab 8: Micro Processors  
+# Lab 8: Micro Processors  
 
 
 Part 1: explanation of the uP  
@@ -36,4 +36,6 @@ always @(*) begin
 
 end
 endmodule
-```
+```  
+### Logisim of the ALU:  
+![IMG](img/ALU.PNG)  
