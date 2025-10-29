@@ -76,6 +76,34 @@ endmodule
 
 `default_nettype wire
 ```  
+### Code for Accumulator B
+```verilog 
+`default_nettype none
+
+module Accumulator_B #
+(
+	parameter N = 4
+)
+(
+	input MainClock,
+	input ClearB,
+	input LatchB,
+	input [N-1:0] B,
+	output reg [N-1:0] AluB
+);
+
+	// Sequential Logic
+	always @(posedge MainClock) begin
+		if (ClearB)
+			AluB <= {N{1'b0}};
+		else begin
+			if(LatchB)
+				AluB <= B; //Load B into the ALU
+		end
+		
+endmodule
+
+`default_nettype wire```  
 ### ROM:
 Given the artifical constraint of the BUS being only 4 bits a system is needed to break down the 8 bits outputed by the program memory. We can break the 8 bit into two 4 bit with the first being instruction and the secon being data. The 6 operations this VSM uses are in the table below.
 **ROM Table**
@@ -97,43 +125,4 @@ stateDiagram-v2
     ExecuteA --> ExecuteB: clk
     ExecuteB --> Fetch: clk
 ```
-$$$
-\title{Proof 5}
-\author{Colin McBride}
-\date{October 2025}
 
-\begin{document}
-
-\maketitle
-
-
-
-
-For every integer $x$, the remainder when $x^2$ is divided by $8$ is either $0$, $1$, or $4$.
-
-
-
-Suppose $x$ is an integer. When we divide any integer by $8$, there are only $8$ possible remainders: $0, 1, 2, 3, 4, 5, 6,$ or $7$. This means every integer $x$ can be written as $x = 8k + r$, where $k$ is some integer and $r$ is one of these $8$ remainders. We will check what happens to $x^2$ in each case.
-
-\textit{Case 1: $x$ is even.} If $x$ is even, we can write $x = 2m$ for some integer $m$. We need to consider whether $m$ is even or odd.
-
-\quad \textit{Subcase 1a:} $m$ is even, so $m = 2n$ and thus $x = 4n$. Then 
-$$x^2 = 16n^2 = 8(2n^2).$$
-The remainder is $0$.
-
-\quad \textit{Subcase 1b:} $m$ is odd, so $m = 2n+1$ and thus $x = 2(2n+1) = 4n+2$. Then 
-$$x^2 = (4n+2)^2 = 16n^2 + 16n + 4 = 8(2n^2 + 2n) + 4.$$
-The remainder is $4$.
-
-\textit{Case 2: $x$ is odd.} If $x$ is odd, we can write $x = 2m + 1$ for some integer $m$. Then
-$$x^2 = (2m+1)^2 = 4m^2 + 4m + 1 = 4m(m+1) + 1.$$
-Notice that $m(m+1)$ is always even (since one of $m$ or $m+1$ must be even), so we can write $m(m+1) = 2\ell$ for some integer $\ell$. Therefore,
-$$x^2 = 4(2\ell) + 1 = 8\ell + 1.$$
-The remainder is $1$.
-
-In all cases, the remainder when $x^2$ is divided by $8$ is either $0$, $1$, or $4$.
-
-
-\end{document}
-
-$$$
