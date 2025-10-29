@@ -91,8 +91,7 @@ Given the artifical constraint of the BUS being only 4 bits a system is needed t
 The Control unit needs to be destructed further into two pieces a Micro Instruction module and an Instruction Register. Doing so will mandate the creation a finite state machine to cycle throough stages of Fetch (stage 1), Decode (stage 2), Execute A (stage 3), Execute B (stage 4). Cycling through each stage per clock cycle.  
 ```mermaid
 stateDiagram-v2
-    [*] --> Idle
-    Idle --> Fetch: clk
+    Idle --> Fetch
     Fetch --> Decode: clk
     Decode --> ExecuteA: clk
     ExecuteA --> ExecuteB: clk
