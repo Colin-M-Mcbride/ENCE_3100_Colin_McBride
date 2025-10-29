@@ -92,9 +92,9 @@ The Control unit needs to be destructed further into two pieces a Micro Instruct
 ```mermaid
 stateDiagram-v2
     [*] --> Idle
-    Idle --> Fetch
-    Fetch --> Decode
-    Decode --> ExecuteA
-    ExecuteA --> ExecuteB
-    ExecuteB --> Fetch
+    Idle --> Fetch: clk
+    Fetch --> Decode: clk
+    Decode --> ExecuteA: clk
+    ExecuteA --> ExecuteB: clk
+    ExecuteB --> Fetch: clk
 ```
