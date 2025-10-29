@@ -37,6 +37,11 @@ always @(*) begin
 end
 endmodule
 ```  
+A line of code used in the ALU is:
+```verilog
+assign IB_BUS = (EnableA == 1'b1) ? AluA : {N{1'bZ}}; //
+```
+This used to stop the BUS from getting unwanted information. 
 ### Logisim of the ALU:  
 ![IMG](img/ALU.PNG)  
 ### Code for Accumulator A:
