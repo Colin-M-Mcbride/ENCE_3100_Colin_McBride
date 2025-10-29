@@ -69,7 +69,7 @@ module Accumulator_A #
 	
 	end
 	// Combinational Logic
-	// this will bw the high impedence
+	// this will be the high impedence
 	assign IB_BUS = (EnableA == 1'b1) ? AluA : {N{1'bZ}}; //
 
 endmodule
