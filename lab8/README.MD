@@ -8,7 +8,8 @@ contains the all the stuff from Martins lecture.
 Part 2: building the thing  
 break down by module  
 the Z conundrum
-''' verilog
+''' 
+verilog
 `default_nettype none
 
 module Arithmetic_Unit #
