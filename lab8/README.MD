@@ -76,3 +76,14 @@ endmodule
 
 `default_nettype wire
 ```  
+### ROM:
+
+**ROM Table**
+|Binary|ASM|Operation|
+|---|---|---|
+|0000|   |NOP|
+|0001|   |ADD|
+|0010|   |SUB|
+|0011|   |OUT|
+|0100|   |IN|
+|0101|   |LDA|
