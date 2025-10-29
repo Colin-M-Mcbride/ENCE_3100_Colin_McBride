@@ -4,7 +4,7 @@
 
 
 ### Part 4  
-
+**Character Codes:**
 | c₂ | c₁ | c₀ | Character |
 |----|----|----|-----------|
 | 0  | 0  | 0  | H         |
@@ -14,5 +14,5 @@
 | 1  | 0  | 0  | blank     |
 | 1  | 0  | 1  | blank     |
 | 1  | 1  | 0  | blank     |
-| 1  | 1  | 1  | blank     |
+| 1  | 1  | 1  | blank     |  
 
