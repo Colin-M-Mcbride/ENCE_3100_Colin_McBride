@@ -89,23 +89,12 @@ Given the artifical constraint of the BUS being only 4 bits a system is needed t
 |0101|LDA|Loads a value into Accumulator A|  
 
 The Control unit needs to be destructed further into two pieces a Micro Instruction module and an Instruction Register. Doing so will mandate the creation a finite state machine to cycle throough stages of Fetch (stage 1), Decode (stage 2), Execute A (stage 3), Execute B (stage 4). Cycling through each stage per clock cycle.  
-╔══════╗  
-║ Idle ║  
-╚══╤═══╝  
-   │  
-   ↓  
-╔═══════════╗  
-║   Fetch   ║ ←─┐  
-╚═════╤═════╝   │  
-      ↓         │  
-╔═══════════╗   │  
-║  Decode   ║   │  
-╚═════╤═════╝   │  
-      ↓         │  
-╔═══════════╗   │  
-║ Execute A ║   │  
-╚═════╤═════╝   │  
-      ↓         │  
-╔═══════════╗   │  
-║ Execute B ║───┘  
-╚═══════════╝  
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Fetch
+    Fetch --> Decode
+    Decode --> ExecuteA
+    ExecuteA --> ExecuteB
+    ExecuteB --> Fetch
+```
