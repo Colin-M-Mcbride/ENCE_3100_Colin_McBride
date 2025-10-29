@@ -77,7 +77,7 @@ endmodule
 `default_nettype wire
 ```  
 ### ROM:
-
+Given the artifical constraint of the BUS being only 4 bits a system is needed to break down the 8 bits outputed by the program memory. We can break the 8 bit into two 4 bit with the first being instruction and the secon being data.
 **ROM Table**
 |Binary|Operation||
 |---|---|---|
