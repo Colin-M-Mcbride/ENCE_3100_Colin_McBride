@@ -35,6 +35,4 @@ assign IB_ALU = (EnableALU == 1'b1) ? ALUout : {N{1'bZ}};
 
 end
 endmodule
-
-`default_nettype wire
 '''
