@@ -111,27 +111,7 @@ endmodule
 `default_nettype wire
 ```  
 
-### ROM:
-Given the artifical constraint of the BUS being only 4 bits a system is needed to break down the 8 bits outputed by the program memory. We can break the 8 bit into two 4 bit with the first being instruction and the secon being data. The 6 operations this VSM uses are in the table below.
-**ROM Table**
-|Binary|Operation||
-|---|---|---|
-|0000|NOP|No Operation|
-|0001|ADD|Adds the values of A and B|
-|0010|SUB||Subtracts the values of A and B|
-|0011|OUT|Out puts the value of A|
-|0100|IN|Takes a given input of a User|
-|0101|LDA|Loads a value into Accumulator A|  
-
-The Control unit needs to be destructed further into two pieces a Micro Instruction module and an Instruction Register. Doing so will mandate the creation a finite state machine to cycle throough stages of Fetch (stage 1), Decode (stage 2), Execute A (stage 3), Execute B (stage 4). Cycling through each stage per clock cycle, see the diagram below.  
-```mermaid
-stateDiagram-v2
-    Idle --> Fetch
-    Fetch --> Decode: clk
-    Decode --> ExecuteA: clk
-    ExecuteA --> ExecuteB: clk
-    ExecuteB --> Fetch: clk
-```
+### ROM and Controller:
 ```verilog
 
 `default_nettype none
@@ -168,7 +148,28 @@ module ROM_Nx8 #
 endmodule
 
 `default_nettype wire
+```  
+Values for commands are stored in 8 bits inside the ROM. Given the artifical constraint of the BUS being only 4 bits a system is needed to break down the 8 bits outputed by the program memory. We can break the 8 bit into two 4 bit with the first being instruction and the secon being data. The 6 operations this VSM uses are in the table below.
+**ROM Table**
+|Binary|Operation||
+|---|---|---|
+|0000|NOP|No Operation|
+|0001|ADD|Adds the values of A and B|
+|0010|SUB||Subtracts the values of A and B|
+|0011|OUT|Out puts the value of A|
+|0100|IN|Takes a given input of a User|
+|0101|LDA|Loads a value into Accumulator A|  
+
+The Control unit needs to be destructed further into two pieces a Micro Instruction module and an Instruction Register. Doing so will mandate the creation a finite state machine to cycle throough stages of Fetch (stage 1), Decode (stage 2), Execute A (stage 3), Execute B (stage 4). Cycling through each stage per clock cycle, see the diagram below.  
+```mermaid
+stateDiagram-v2
+    Idle --> Fetch
+    Fetch --> Decode: clk
+    Decode --> ExecuteA: clk
+    ExecuteA --> ExecuteB: clk
+    ExecuteB --> Fetch: clk
 ```
+
 ```verilog
 `default_nettype none
 
@@ -254,7 +255,9 @@ module FSM_MicroInstr #
 	end
 	
 	// 3. Output Logic (combinational)
-	
+```
+The code above serves the purpose of our finite state machine. The code below is part of the above module and our controller.
+```verilog
 	always @(*) begin
 	
 		// default all signals are zero
@@ -363,4 +366,67 @@ endmodule
 
 `default_nettype wire
 ```
+| NOPI_0000 | Phase 1<br>0001 | Phase 2<br>0010 | Phase 3<br>0100 | Phase 4<br>1000 |
+|-----------|-----------------|-----------------|-----------------|-----------------|
+| ProgCount | 0 | 1 | 0 | 0 |
+| EnableOut | 0 | 0 | 0 | 0 |
+| LoadInstr | 1 | 0 | 0 | 0 |
+| LatchB | 0 | 0 | 0 | 0 |
+| LatchA | 0 | 0 | 0 | 0 |
+| EnableInstr | 0 | 1 | 0 | 0 |
+| EnableIn | 0 | 0 | 0 | 0 |
+| EnableAlu | 0 | 0 | 0 | 0 |
+| EnableA | 0 | 0 | 0 | 0 |
+| AddSub | 0 | 0 | 0 | 0 |
 
+| ADDI_0001 | Phase 1<br>0001 | Phase 2<br>0010 | Phase 3<br>0100 | Phase 4<br>1000 |
+|-----------|-----------------|-----------------|-----------------|-----------------|
+| ProgCount | 0 | 1 | 0 | 0 |
+| EnableOut | 0 | 0 | 0 | 0 |
+| LoadInstr | 1 | 0 | 0 | 0 |
+| LatchB | 0 | 0 | 0 | 0 |
+| LatchA | 0 | 0 | 0 | 1 |
+| EnableInstr | 0 | 1 | 1 | 0 |
+| EnableIn | 0 | 0 | 0 | 0 |
+| EnableAlu | 0 | 0 | 0 | 1 |
+| EnableA | 0 | 0 | 0 | 0 |
+| AddSub | 0 | 0 | 0 | 0 |
+
+| SUBI_0010 | Phase 1<br>0001 | Phase 2<br>0010 | Phase 3<br>0100 | Phase 4<br>1000 |
+|-----------|-----------------|-----------------|-----------------|-----------------|
+| ProgCount | 0 | 1 | 0 | 0 |
+| EnableOut | 0 | 0 | 0 | 0 |
+| LoadInstr | 1 | 0 | 0 | 0 |
+| LatchB | 0 | 0 | 1 | 0 |
+| LatchA | 0 | 0 | 0 | 1 |
+| EnableInstr | 0 | 1 | 1 | 0 |
+| EnableIn | 0 | 0 | 0 | 0 |
+| EnableAlu | 0 | 0 | 0 | 1 |
+| EnableA | 0 | 0 | 0 | 0 |
+| AddSub | 0 | 0 | 0 | 1 |
+
+| INI_0100 | Phase 1<br>0001 | Phase 2<br>0010 | Phase 3<br>0100 | Phase 4<br>1000 |
+|----------|-----------------|-----------------|-----------------|-----------------|
+| ProgCount | 0 | 1 | 0 | 0 |
+| EnableOut | 0 | 0 | 0 | 0 |
+| LoadInstr | 1 | 0 | 0 | 0 |
+| LatchB | 0 | 0 | 0 | 0 |
+| LatchA | 0 | 0 | 1 | 0 |
+| EnableInstr | 0 | 1 | 0 | 0 |
+| EnableIn | 0 | 0 | 1 | 0 |
+| EnableAlu | 0 | 0 | 0 | 0 |
+| EnableA | 0 | 0 | 0 | 0 |
+| AddSub | 0 | 0 | 0 | 0 |
+
+| LDA_0101 | Phase 1<br>0001 | Phase 2<br>0010 | Phase 3<br>0100 | Phase 4<br>1000 |
+|----------|-----------------|-----------------|-----------------|-----------------|
+| ProgCount | 0 | 1 | 0 | 0 |
+| EnableOut | 0 | 0 | 0 | 0 |
+| LoadInstr | 1 | 0 | 0 | 0 |
+| LatchB | 0 | 0 | 0 | 0 |
+| LatchA | 0 | 0 | 1 | 0 |
+| EnableInstr | 0 | 1 | 1 | 0 |
+| EnableIn | 0 | 0 | 0 | 0 |
+| EnableAlu | 0 | 0 | 0 | 0 |
+| EnableA | 0 | 0 | 1 | 0 |
+| AddSub | 0 | 0 | 0 | 0 |
