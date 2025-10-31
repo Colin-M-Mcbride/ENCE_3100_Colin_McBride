@@ -6,8 +6,6 @@ contains the all the stuff from Martins lecture.
 ![IMG](img/VSM.PNG) 
 
 Part 2: building the thing  
-break down by module  
-the Z conundrum and high impedence  
 ### Code for the ALU:
 ```verilog
 `default_nettype none
