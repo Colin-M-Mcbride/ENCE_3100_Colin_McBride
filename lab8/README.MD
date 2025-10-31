@@ -2,7 +2,7 @@
 
 
 ### Processor Architecture Overview
-![IMG](img/VSM.PNG) 
+![IMG](img/VSM.PNG)  
 This microprocessor follows a simple Von Neumann architecture with a 4-bit internal bus connecting all the major components. The bus is the highway that data travels on between modules - only one module can transmit at a time, which is why everything uses high impedance states when they're not actively talking.
 The processor has five main functional blocks connected to the bus. Accumulator A holds one operand and can output its value back to the bus. Accumulator B holds the other operand but is write-only from the bus perspective. The Arithmetic Unit does the actual addition and subtraction between A and B. The Input and Output registers handle communication with the outside world - Input lets us read external data onto the bus, Output displays whatever's on the bus externally.
 The control logic sits on the left side. Program memory is an 8×8 ROM that stores our instructions. The Program Counter keeps track of which instruction we're on and increments each cycle. The Instruction Register holds the current instruction being executed. And the Micro Instruction unit (our FSM) orchestrates everything by generating all the enable and latch signals that tell each component when to read from or write to the bus.
