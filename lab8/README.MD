@@ -39,7 +39,7 @@ A line of code used in the ALU is:
 ```verilog
 assign IB_BUS = (EnableA == 1'b1) ? AluA : {N{1'bZ}}; //
 ```
-This used to stop the BUS from getting unwanted information. 
+This crucial for preventing bus contention. When EnableA is low, the output goes to high impedance (Z state), which basically disconnects accumulator A from the bus. This lets other modules talk on the bus without everything trying to output at once and causing a short circuit. Without this, you'd have multiple outputs fighting each other on the same wire.  
 ### Logisim of the ALU:  
 ![IMG](img/ALU.PNG)  
 ### Code for Accumulator A:
@@ -167,7 +167,7 @@ stateDiagram-v2
     ExecuteA --> ExecuteB: clk
     ExecuteB --> Fetch: clk
 ```
-
+The FSM cycles through four phases every instruction. Phase 1 fetches the instruction from ROM and loads it into the instruction register. Phase 2 increments the program counter to point at the next instruction. Phase 3 and 4 are where the actual work happens - they activate different control signals depending on what instruction we're executing. Some instructions only need Phase 3, others use both phases.  
 ```verilog
 `default_nettype none
 
