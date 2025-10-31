@@ -150,6 +150,33 @@ endmodule
 `default_nettype wire
 ```  
 Values for commands are stored in 8 bits inside the ROM. Given the artifical constraint of the BUS being only 4 bits a system is needed to break down the 8 bits outputed by the program memory. We can break the 8 bit into two 4 bit with the first being instruction and the secon being data. The 6 operations this VSM uses are in the table below.
+### Program Counter
+```verilog
+`default_nettype none
+
+module ProgramCounter #
+(
+	parameter N = 4
+)
+(
+	input MainClock,
+	input EnableCount,
+	input ClearCounter,
+	output reg [N-1:0] Counter
+);
+
+	always @(posedge MainClock) begin
+		if(ClearCounter)
+			Counter <= {N{1'b0}};
+		else if(EnableCount)
+			Counter <= Counter + 1;
+	end
+	
+endmodule
+
+`default_nettype wire
+```
+
 **ROM Table**
 |Binary|Operation||
 |---|---|---|
