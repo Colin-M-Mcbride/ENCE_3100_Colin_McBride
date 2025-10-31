@@ -110,7 +110,33 @@ endmodule
 
 `default_nettype wire
 ```  
+### Program Counter
+```verilog
+`default_nettype none
 
+module ProgramCounter #
+(
+	parameter N = 4
+)
+(
+	input MainClock,
+	input EnableCount,
+	input ClearCounter,
+	output reg [N-1:0] Counter
+);
+
+	always @(posedge MainClock) begin
+		if(ClearCounter)
+			Counter <= {N{1'b0}};
+		else if(EnableCount)
+			Counter <= Counter + 1;
+	end
+	
+endmodule
+
+`default_nettype wire
+```  
+The Program Counter keeps track of which instruction we're currently executing. It's basically just a counter that increments by one each time EnableCount goes high. The FSM activates EnableCount during Phase 2 (the decode phase) so the counter advances to the next instruction while the current one is being executed.   
 ### ROM and Controller:
 ```verilog
 
@@ -150,32 +176,7 @@ endmodule
 `default_nettype wire
 ```  
 Values for commands are stored in 8 bits inside the ROM. Given the artifical constraint of the BUS being only 4 bits a system is needed to break down the 8 bits outputed by the program memory. We can break the 8 bit into two 4 bit with the first being instruction and the secon being data. The 6 operations this VSM uses are in the table below.
-### Program Counter
-```verilog
-`default_nettype none
 
-module ProgramCounter #
-(
-	parameter N = 4
-)
-(
-	input MainClock,
-	input EnableCount,
-	input ClearCounter,
-	output reg [N-1:0] Counter
-);
-
-	always @(posedge MainClock) begin
-		if(ClearCounter)
-			Counter <= {N{1'b0}};
-		else if(EnableCount)
-			Counter <= Counter + 1;
-	end
-	
-endmodule
-
-`default_nettype wire
-```
 
 **ROM Table**
 |Binary|Operation||
