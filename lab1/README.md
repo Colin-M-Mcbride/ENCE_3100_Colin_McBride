@@ -86,7 +86,24 @@ Each of the five inputs could be properly selected and displayed on the green LE
 
 ### Description
 A 7-segment decoder was implemented to display characters H, E, L, O, and blank on a 7-segment display based on a 3-bit input code.
-
+```verilog
+module char_7seg (C, Display);
+    input [2:0] C;       // input code
+    output [0:6] Display; // output 7-seg code
+    reg [0:6] Display;
+    
+    always @(*)
+    begin
+        case (C)
+            3'b000: Display = 7'b0001001; // H
+            3'b001: Display = 7'b0000110; // E
+            3'b010: Display = 7'b1000111; // L
+            3'b011: Display = 7'b1000000; // O
+            default: Display = 7'b1111111; // blank
+        endcase
+    end
+endmodule
+```
 ### Character Code Table
 | c₂ | c₁ | c₀ | Character |
 |----|----|----|-----------|
@@ -151,8 +168,28 @@ The word "HELLO" was successfully displayed and rotated across the five displays
 ## Part VI: Rotating 5 Characters on 8 Displays
 
 ### Description
-The design from Part V was extended to use all eight 7-segment displays. This required implementing 8-to-1 multiplexers and adding blank characters to properly position the 5-character word.
+The design from Part V was extended to use all six 7-segment displays. This required implementing 8-to-1 multiplexers and adding blank characters to properly position the 5-character word.
+```verilog
+module mux_3bit_6to1 (S, U, V, W, X, Y, Z, M);
+    input [2:0] S, U, V, W, X, Y, Z;
+    output [2:0] M;
+    reg [2:0] M;
+    
+    always @(*)
+    begin
+        case (S)
+            3'b000: M = U;
+            3'b001: M = V;
+            3'b010: M = W;
+            3'b011: M = X;
+            3'b100: M = Y;
+            3'b101: M = Z;
+            default: M = 3'b111; // blank
+        endcase
+    end
+endmodule
 
+```
 ### Rotation Pattern for "HELLO"
 | SW₁₇ | SW₁₆ | SW₁₅ | HEX7 | HEX6 | HEX5 | HEX4 | HEX3 | HEX2 | HEX1 | HEX0 |
 |------|------|------|------|------|------|------|------|------|------|------|
@@ -169,31 +206,51 @@ The design from Part V was extended to use all eight 7-segment displays. This re
 
 ### Implementation
 Eight 8-to-1 multiplexers were used (one per display). Each multiplexer selects from eight possible inputs that include the five character codes and three blank codes in appropriate positions.
-
+```verilog
+module part6 (SW, HEX5, HEX4, HEX3, HEX2, HEX1, HEX0);
+    input [7:0] SW;      // 8 toggle switches
+    output [0:6] HEX5, HEX4, HEX3, HEX2, HEX1, HEX0; // 7-seg displays
+    
+    wire [2:0] M5, M4, M3, M2, M1, M0;
+    wire [2:0] blank = 3'b111; // blank character code
+    
+    // Character codes from switches SW[4:0]
+    // Each character uses different bit combinations
+    wire [2:0] U = {SW[4], SW[3], SW[2]};  // Character 1 (H)
+    wire [2:0] V = {SW[4], SW[3], SW[1]};  // Character 2 (E)
+    wire [2:0] W = {SW[4], SW[2], SW[0]};  // Character 3 (L)
+    wire [2:0] X = {SW[3], SW[1], SW[0]};  // Character 4 (L)
+    wire [2:0] Y = {SW[2], SW[1], SW[0]};  // Character 5 (O)
+    
+    // Six instances of 3-bit wide 6-to-1 multiplexer
+    // For HELLO rotating on 6 displays with 1 blank
+    
+    // HEX5 (leftmost): blank, H, E, L, L, O
+    mux_3bit_6to1 Mux5 (SW[7:5], blank, U, V, W, X, Y, M5);
+    
+    // HEX4: H, E, L, L, O, blank
+    mux_3bit_6to1 Mux4 (SW[7:5], U, V, W, X, Y, blank, M4);
+    
+    // HEX3: E, L, L, O, blank, H
+    mux_3bit_6to1 Mux3 (SW[7:5], V, W, X, Y, blank, U, M3);
+    
+    // HEX2: L, L, O, blank, H, E
+    mux_3bit_6to1 Mux2 (SW[7:5], W, X, Y, blank, U, V, M2);
+    
+    // HEX1: L, O, blank, H, E, L
+    mux_3bit_6to1 Mux1 (SW[7:5], X, Y, blank, U, V, W, M1);
+    
+    // HEX0 (rightmost): O, blank, H, E, L, L
+    mux_3bit_6to1 Mux0 (SW[7:5], Y, blank, U, V, W, X, M0);
+    
+    // Six instances of 7-segment decoder
+    char_7seg H5 (M5, HEX5);
+    char_7seg H4 (M4, HEX4);
+    char_7seg H3 (M3, HEX3);
+    char_7seg H2 (M2, HEX2);
+    char_7seg H1 (M1, HEX1);
+    char_7seg H0 (M0, HEX0);
+endmodule
+```
 ### Results
 The extended circuit successfully displayed "HELLO" with leading blanks and rotated the word through all eight positions. The rotation created a smooth circular animation effect as the word moved across all displays.
-
----
-
-## Conclusion
-
-This laboratory exercise successfully demonstrated:
-1. Basic FPGA I/O interfacing with switches and LEDs
-2. Implementation of multiplexer circuits in Verilog
-3. 7-segment display control and character encoding
-4. Hierarchical design using multiple module instances
-5. Complex data routing to achieve rotating display effects
-
-All circuits were synthesized, compiled, and tested on the DE2 board with correct functionality. The progressive complexity of each part built upon previous work, illustrating modular design principles in digital systems.
-
----
-
-## Appendix: Pin Assignments
-
-Pin assignments were imported from the DE2_pin_assignments.csv file provided by Altera. Key assignments include:
-- SW[17:0]: Toggle switches
-- LEDR[17:0]: Red LEDs
-- LEDG[7:0]: Green LEDs
-- HEX0-HEX7: 7-segment displays (each with [0:6] segments)
-
-All pin names in the Verilog code matched those in the pin assignment file to ensure proper FPGA configuration.
