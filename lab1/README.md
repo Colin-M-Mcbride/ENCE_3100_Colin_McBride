@@ -25,7 +25,17 @@ The circuit was successfully compiled and downloaded to the DE2 board. Toggling 
 ---
 
 ## Part II: 8-bit Wide 2-to-1 Multiplexer
+```verilog
+module mux_2_1(
+	input s,
+	input x,
+	input y,
+	output m
+);
 
+assign m = (~s & x) | (s & y);
+endmodule
+```
 ### Description
 An 8-bit wide 2-to-1 multiplexer was implemented using eight individual 2-to-1 multiplexers. The circuit selects between two 8-bit inputs (X and Y) based on a select signal (s).
 
@@ -38,47 +48,64 @@ An 8-bit wide 2-to-1 multiplexer was implemented using eight individual 2-to-1 m
 ### Implementation
 The multiplexer uses the Boolean expression: `m = (~s & x) | (s & y)` for each bit.
 
-Switch assignments:
-- SW₁₇: Select input (s)
-- SW₇₋₀: Input X
-- SW₁₅₋₈: Input Y
-- LEDR₁₇₋₀: Display switch states
-- LEDG₇₋₀: Output M
-
-### Results
-The 8-bit multiplexer functioned correctly. When SW₁₇ = 0, the output displayed the value of SW₇₋₀. When SW₁₇ = 1, the output displayed the value of SW₁₅₋₈.
 
 ---
 
-## Part III: 3-bit Wide 5-to-1 Multiplexer
-
 ### Description
-A 3-bit wide 5-to-1 multiplexer was constructed using multiple 2-to-1 multiplexers. The circuit selects one of five 3-bit inputs (U, V, W, X, Y) based on a 3-bit select signal.
+A 3-bit wide 4-to-1 multiplexer was constructed using multiple 2-to-1 multiplexers. The circuit selects one of four 3-bit inputs (U, V, W, X) based on a 2-bit select signal.
+```verilog
+module mux_4_1(
+	input x [7:0],
+	input y [7:0],
+	input s,
+	output M [7:0]
 
+);
+//Mux 0
+mux_2_1 m0(
+	.s(s),
+	.x(X[0]),
+	.y(Y[0]),
+	.M(M[0])
+);
+	
+//Mux 1
+
+mux_2_1 m1(
+	.s(s),
+	.x(X[1]),
+	.y(Y[1]),
+	.M(M[1])
+);
+	
+	
+//Mux 2
+
+mux_2_1 m2(
+	.s(s),
+	.x(X[2]),
+	.y(Y[2]),
+	.M(M[2])
+);
+	
+	
+//Mux 3
+
+mux_2_1 m3(
+	.s(s),
+	.x(X[3]),
+	.y(Y[3]),
+	.M(M[3])
+);
+	
+```
 ### Truth Table
-| s₂ | s₁ | s₀ | Output M |
-|----|----|----|----------|
-| 0  | 0  | 0  | U        |
-| 0  | 0  | 1  | V        |
-| 0  | 1  | 0  | W        |
-| 0  | 1  | 1  | X        |
-| 1  | 0  | 0  | Y        |
-| 1  | 0  | 1  | Y        |
-| 1  | 1  | 0  | Y        |
-| 1  | 1  | 1  | Y        |
-
-### Implementation
-Switch assignments:
-- SW₁₇₋₁₅: Select inputs (s₂s₁s₀)
-- SW₁₄₋₁₂: Input U
-- SW₁₁₋₉: Input V
-- SW₈₋₆: Input W
-- SW₅₋₃: Input X
-- SW₂₋₀: Input Y
-- LEDG₂₋₀: Output M
-
-### Results
-Each of the five inputs could be properly selected and displayed on the green LEDs by setting the appropriate select code on SW₁₇₋₁₅.
+| s₁ | s₀ | Output M |
+|----|----|----------|
+| 0  | 0  | U        |
+| 0  | 1  | V        |
+| 1  | 0  | W        |
+| 1  | 1  | X        |
 
 ---
 
