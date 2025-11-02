@@ -2,20 +2,23 @@
 
 In this lab, the DE10 Lite implements a UART TX/RX loop that displays received characters on seven-segment displays. When the word "HELLO" is detected, the system displays "HELLo" for three seconds before reverting to normal operation.
 
-## Part 1- Predefined Circuitry
+## UART Communication Infrastructure (Predefined)
 
 This portion of the code was provided as part of the lab framework. The `async_receiver` and `async_transmitter` modules handle the serial communication protocol at 115200 baud over GPIO pins 33 and 35 respectively. These modules are intentionally abstracted away as they implement the bit-level timing and framing required for UART communication.
 
-### UART Communication Flow
+### Data Flow and Module Interconnections
 
 ```verilog
+// 50MHz system clock distribution
 wire w_clk = MAX10_CLK1_50;
 
-wire RxD_data_ready;
-wire [7:0] RxD_data;
-reg [7:0] GPout;
-wire [7:0] seg_data;
+// UART receiver signals
+wire RxD_data_ready;  // Single-cycle pulse when byte received
+wire [7:0] RxD_data;  // Received ASCII byte
+reg [7:0] GPout;      // Latched received data
+wire [7:0] seg_data;  // Seven-segment encoded output
 
+// UART receiver on GPIO[35]
 async_receiver RX(
     .clk(w_clk),
     .RxD(GPIO[35]),
@@ -23,10 +26,13 @@ async_receiver RX(
     .RxD_data(RxD_data)
 );
 
+// Latch received data on ready pulse
 always @(posedge w_clk)
     if(RxD_data_ready)
         GPout <= RxD_data;
 
+// Echo transmitter on GPIO[33]
+// Transmit starts immediately when data ready
 async_transmitter TX(
     .clk(w_clk),
     .TxD(GPIO[33]),
@@ -34,6 +40,7 @@ async_transmitter TX(
     .TxD_data(RxD_data)
 );
 
+// ASCII to seven-segment converter
 char2seg Display(
     .char(GPout),
     .HEX0(seg_data)
@@ -42,26 +49,26 @@ char2seg Display(
 
 The 50MHz clock (`MAX10_CLK1_50`) is distributed to all synchronous modules via `w_clk`, ensuring all state machines and counters operate on the same time base. The `async_receiver` monitors GPIO pin 35 for incoming serial data. When a complete byte is received (start bit, 8 data bits, stop bit), `RxD_data_ready` pulses high for exactly one clock cycle. This single-cycle pulse serves three purposes: it latches the received byte into the `GPout` register, triggers the transmitter to echo the data back on GPIO pin 33, and signals the FSM that new data is available. The `char2seg` module continuously converts the ASCII value in `GPout` to seven-segment display encoding in `seg_data`. This conversion is purely combinational, so the display updates immediately when `GPout` changes.
 
-## Part 2- New Circuitry (FSM and Counter)
+## Word Detection System (Custom Logic)
 
 The custom logic consists of two primary components: a finite state machine for pattern matching and a counter for timing control.
 
-### Hello Detection (FSM)
+### Finite State Machine - Sequential Pattern Matcher
 
 The word detection problem requires sequential pattern matching - we must recognize five specific characters in order. A finite state machine is the natural solution as it can track progress through the word while handling invalid input gracefully by resetting to the start state.
 
-#### Module Interface and State Encoding
+#### State Definition and Synchronous Update Logic
 
 ```verilog
 module FSM_Word_Detector(
     input rst,
     input clk,
-    input [7:0] RxD_data,
-    input Rx_detect,
-    input [7:0] seg_data,
-    input counter_done,
-    output reg counter_start,
-    output reg [7:0] HEX0,
+    input [7:0] RxD_data,      // Raw ASCII byte from UART
+    input Rx_detect,            // Pulse when new data available
+    input [7:0] seg_data,       // Seven-segment encoded character
+    input counter_done,         // Feedback from 3s counter
+    output reg counter_start,   // Enable signal for counter
+    output reg [7:0] HEX0,     // Seven-segment display outputs
     output reg [7:0] HEX1,
     output reg [7:0] HEX2,
     output reg [7:0] HEX3,
@@ -69,15 +76,24 @@ module FSM_Word_Detector(
     output reg [7:0] HEX5
 );
 
+// State storage registers
 reg [2:0] state, next_state, prev_state;
 
-localparam [2:0] A = 3'd0, H = 3'd1, E = 3'd2, L = 3'd3, L2 = 3'd4, O = 3'd5;
+// State definitions for "HELLO" detection
+localparam [2:0] A = 3'd0,   // Initial/Reset state
+                 H = 3'd1,   // Detected 'H'
+                 E = 3'd2,   // Detected "HE"
+                 L = 3'd3,   // Detected "HEL" (first L)
+                 L2 = 3'd4,  // Detected "HELL" (second L)
+                 O = 3'd5;   // Complete "HELLO"
 
+// Synchronous state update
+// prev_state tracks where we came from (needed for L vs L2 logic)
 always @(posedge clk) begin
     if(rst)
         state <= A;
     else begin
-        prev_state <= state;
+        prev_state <= state;  // Store current before updating
         state <= next_state;
     end
 end
@@ -99,16 +115,37 @@ Three 3-bit registers manage state: `state` holds the current state, `next_state
 #### Next State Logic
 
 ```verilog
-//next state logic
+// Next state logic - evaluates on falling edge of control signals
+// negedge prevents multiple evaluations during single data reception
 always @(negedge Rx_detect, negedge counter_done) begin
     case(state)
+        // State A: Wait for 'H' to start sequence
         A: next_state <= (seg_data == 8'b01001001/*H*/) ? H : A;
-        H: next_state <= (seg_data == 8'b01000110/*E*/) ? E : (seg_data == 8'b01001001/*H*/) ? H : A;
-        E: next_state <= (seg_data == 8'b01100111/*L*/) ? L : (seg_data == 8'b01001001/*H*/) ? H : A;
+        
+        // State H: Got 'H', expect 'E' next
+        // If 'H' again, stay in H (handles "HHHELLO")
+        H: next_state <= (seg_data == 8'b01000110/*E*/) ? E : 
+                         (seg_data == 8'b01001001/*H*/) ? H : A;
+        
+        // State E: Got "HE", expect first 'L'
+        // If 'H' received, restart from H (handles "HEHELLO")
+        E: next_state <= (seg_data == 8'b01100111/*L*/) ? L : 
+                         (seg_data == 8'b01001001/*H*/) ? H : A;
+        
+        // State L: Got "HEL", expect second 'L'
+        // Check prev_state to ensure we came from L not elsewhere
+        // TODO: Second condition appears redundant
         L: next_state <= (seg_data == 8'b01100111/*L*/) && prev_state == L) ? L2 :
                          (seg_data == 8'b01100111/*L*/) ? L : A;
-        L2: next_state <= (seg_data == 8'b01010011/*O*/) ? O : (seg_data == 8'b01100111/*L*/) ? L2 : A;
+        
+        // State L2: Got "HELL", expect 'O' to complete
+        // If 'L' again, stay in L2 (handles "HELLLLO")
+        L2: next_state <= (seg_data == 8'b01010011/*O*/) ? O : 
+                          (seg_data == 8'b01100111/*L*/) ? L2 : A;
+        
+        // State O: Complete word detected, wait for counter
         O: next_state <= counter_done ? A : O;
+        
         default: next_state <= A;
     endcase
 end
@@ -125,28 +162,33 @@ The logic compares `seg_data` (seven-segment encoded characters) rather than raw
 #### Output Logic
 
 ```verilog
+// Output logic - combinational, determines display and control signals
 always @(*) begin
     case(state)
+        // States A, H, E, L, L2: Normal operation
+        // Display current character on HEX0, blank others
         A: begin
-            HEX0 = seg_data;
-            HEX1 = 8'hFF;  // Blank remaining displays
+            HEX0 = seg_data;     // Show current character
+            HEX1 = 8'hFF;        // 8'hFF = all segments off (blank)
             HEX2 = 8'hFF;
             HEX3 = 8'hFF;
             HEX4 = 8'hFF;
             HEX5 = 8'hFF;
-            counter_start = 1'b0;
+            counter_start = 1'b0;  // Counter disabled
         end
         // States H, E, L, L2 identical to state A
+        
+        // State O: "HELLO" detected, display word for 3 seconds
         O: begin
-            HEX0 = 8'h77;              // 'H'
-            HEX5 = 8'b01000001;        // 'o' (lowercase)
-            HEX4 = 8'b01000110;        // 'E'
-            HEX3 = 8'b01000011;        // 'L'
+            HEX0 = 8'h77;              // 'H' = 0111 0111
+            HEX5 = 8'b01000001;        // 'o' lowercase
+            HEX4 = 8'b01000110;        // 'E' = 0100 0110
+            HEX3 = 8'b01000011;        // 'L' = 0100 0011
             HEX2 = 8'b01000011;        // 'L'
-            HEX1 = 8'b01000011;        // 'L' (error: should be 'o')
-            counter_start = 1'b1;
+            HEX1 = 8'b01000011;        // 'L' (TODO: should be 'o')
+            counter_start = 1'b1;      // Start 3-second counter
             if(counter_done)
-                counter_start = 1'b0;
+                counter_start = 1'b0;  // Clear when done
         end
     endcase
 end
@@ -163,41 +205,48 @@ The `counter_3s` module generates a precise 3-second delay using the FPGA's 50MH
 ```verilog
 module counter_3s
 #(
-    parameter CLK_SPEED = 50_000_000,
-    parameter WIDTH = 26
+    parameter CLK_SPEED = 50_000_000,  // 50MHz clock frequency
+    parameter WIDTH = 26                // Bits needed: 2^26 = 67M > 50M
 )
 (
     input clk,
     input rst,
-    input en,
-    output reg [1:0] count,
-    output reg counter_done
+    input en,                           // Enable from FSM counter_start
+    output reg [1:0] count,            // Counts seconds: 0, 1, 2, 3
+    output reg counter_done            // Pulses high when count reaches 3
 );
 
-reg [WIDTH-1:0] clk_count;
+reg [WIDTH-1:0] clk_count;  // Clock cycle counter for frequency division
 
 always @(posedge clk) begin
     if(rst) begin
-        clk_count <= {WIDTH{1'b0}};
+        // Reset all counters and flags
+        clk_count <= {WIDTH{1'b0}};  // Replication: 26'b0
         count <= 2'd0;
         counter_done <= 1'b0;
     end
     else if(en) begin
+        // Increment clock cycle counter
         clk_count <= clk_count + 1;
+        
+        // One second elapsed: 50M cycles counted
+        // Use CLK_SPEED-1 because we count from 0
         if(clk_count == CLK_SPEED - 1) begin
-            clk_count <= {WIDTH{1'b0}};
-            count <= count + 1;
+            clk_count <= {WIDTH{1'b0}};  // Reset cycle counter
+            count <= count + 1;           // Increment second counter
         end
+        
+        // Three seconds complete: count went 0->1->2->3
         if(count == 2'd3) begin
-            counter_done <= 1'b1;
-            count <= 2'd0;
+            counter_done <= 1'b1;         // Signal completion
+            count <= 2'd0;                // Auto-reset for next use
             clk_count <= {WIDTH{1'b0}};
         end
         else
             counter_done <= 1'b0;
     end
     else
-        counter_done <= 1'b0;
+        counter_done <= 1'b0;  // Clear done when disabled
 end
 endmodule
 ```
