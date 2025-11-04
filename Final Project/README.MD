@@ -43,5 +43,20 @@ module Arithmetic_Unit (
     assign Zero = (ALU_Result == 32'd0);
 endmodule
 ```
+```verilog
+/* 
+--------------------------------
+ALU TEST
+--------------------------------
+*/
+Arithmetic_Unit (
+    .A (SW[9:6]), // Variable values of A for testing opperations
+    .B (5'b00101), // Loading a fixed value of 5 just cause
+    .ALU_Control (SW[3:0]), 
+    .ALU_Result (LEDR [6:0]), // Display binary value
+    .Zero (LEDR[9]) // If ay result is 0
+);
+endmodule
+```
 ## Registers
 ## mmmm bus
