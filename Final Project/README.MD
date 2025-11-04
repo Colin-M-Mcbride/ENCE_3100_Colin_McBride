@@ -3,6 +3,7 @@
 ![IMG](img/RISC-V.PNG)
 
 ---
+Let's start with expanding parts from our old VSM.  
 ## ALU
 ```verilog
 module Arithmetic_Unit (
@@ -42,3 +43,5 @@ module Arithmetic_Unit (
     assign Zero = (ALU_Result == 32'd0);
 endmodule
 ```
+## Registers
+## mmmm bus
