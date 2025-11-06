@@ -1,5 +1,9 @@
 #RISC-V Machine  
 --- 
+# Total TODO:  
+*RTL for modules*   
+adding RTL's for every module is just absurd  
+
 ![IMG](img/RISC-V.PNG)
 
 ---
@@ -94,12 +98,9 @@ endmodule
 ```
 ### Register test driver
 ```verilog
-    /* 
-	--------------------------------
-	Registers test
-	Works
-	--------------------------------
-	*/
+	//-------------------------------------
+	// Registers test
+	//-------------------------------------
     //-------------------------------------
     // Clock and Control Signals
     //-------------------------------------
@@ -159,4 +160,9 @@ endmodule
     seg7Decoder hex5(.i_bin(rs1_data[19:16]), .o_HEX(HEX5));
 
 ```
-## mmmm bus
+## Controller and ROM  
+*TODO:*  
+Updated FSM Diagram (mermaid)  
+Updated ROM table  
+**after this point we have essenially built what we need.**
+
