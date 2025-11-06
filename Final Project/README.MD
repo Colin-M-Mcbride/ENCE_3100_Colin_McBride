@@ -77,7 +77,7 @@ module RegisterFile (
 );
 
     // Storage for 32 registers
-    reg [31:0] registers [0:31];
+    reg [31:0] registers [0:31]; // A register of registers
     
     // Read ports: x0 always returns zero, others return stored value
     assign rs1_data = (rs1_addr == 5'd0) ? 32'd0 : registers[rs1_addr];
@@ -96,8 +96,6 @@ module RegisterFile (
     
 endmodule
 ```
-![IMG](img/REG.PNG)
-
 ### Register test driver
 ```verilog
 	//-------------------------------------
@@ -162,6 +160,11 @@ endmodule
     seg7Decoder hex5(.i_bin(rs1_data[19:16]), .o_HEX(HEX5));
 
 ```
+![IMG](img/REG.PNG)
+Truly absurd   
+![IMG](img/REGZOOM.PNG)
+The line of code ```verilog      reg [31:0] registers [0:31]; // A register of registers
+```  Creates 32 D flip flops per register address creating a sort of hash table of registers where each registers address is the key. 
 ## Controller and ROM  
 *TODO:*  
 Updated FSM Diagram (mermaid)  
