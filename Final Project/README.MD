@@ -96,6 +96,8 @@ module RegisterFile (
     
 endmodule
 ```
+![IMG](img/REG.PNG)
+
 ### Register test driver
 ```verilog
 	//-------------------------------------
