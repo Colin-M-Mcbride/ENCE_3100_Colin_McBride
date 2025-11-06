@@ -9,6 +9,7 @@ adding RTL's for every module is just absurd
 ---
 Let's start with expanding parts from our old VSM.  
 ## ALU
+### ALU.v
 ```verilog
 module Arithmetic_Unit (
     input [31:0] A,
@@ -47,6 +48,7 @@ module Arithmetic_Unit (
     assign Zero = (ALU_Result == 32'd0);
 endmodule
 ```
+### ALU Test Driver
 ```verilog
 /* 
 --------------------------------
@@ -164,12 +166,15 @@ endmodule
 ### Further Explanations of RegisterFile  
 ![IMG](img/REG.PNG)  
 Truly absurd   
-![IMG](img/REGZOOM.PNG)
-The line of code: 
+
+The line of code in RegisterFile.v: 
 ```verilog
 reg [31:0] registers [0:31]; // A register of registers
 ```  
-Creates 32 D flip flops per register address creating a sort of hash table of registers where each registers address is the key. 
+Creates 32 D flip flops per register address creating a sort of hash table of registers where each registers address is the key and each sub register are the buckets. This can be seen in the RTL Viewer built into verilog.
+![IMG](img/REGZOOM.PNG)
+![IMG](img/REG2.PNG)
+
 ## Controller and ROM  
 *TODO:*  
 Updated FSM Diagram (mermaid)  
