@@ -1,6 +1,6 @@
 ENCE 3100 with Professor Goncalo Fernandes Pereira Martins
 
-```verilog
+```mermaid
 classDiagram
     class DataViewerApp {
         -TemperatureDataManager dataManager
