@@ -27,8 +27,7 @@ module Arithmetic_Unit (
     localparam SLL  = 4'b0110;  // Shift left logical
     localparam SRL  = 4'b0111;  // Shift right logical
     localparam SRA  = 4'b1000;  // Shift right arithmetic
-    localparam MUL  = 4'b1001;  // Multiply (M extension)
-    
+	localparam STLU = 4'b1001: result = (a < b) ? 1 : 0; // Set Less Than Unsigned
     always @(*) begin
         case(ALU_Control)
             ADD:  ALU_Result = A + B;
@@ -175,8 +174,8 @@ Creates 32 D flip flops per register address creating a sort of hash table of re
 ![IMG](img/REGZOOM.PNG)  
 ![IMG](img/REG2.PNG)  
 
-## R Type Instructions
-With our ALU and RegisterFile complete we can begin creating the first and easiets instruction set, R Type. R type are our simple functions done by the ALU.  
+## I Type Instructions
+With our ALU and RegisterFile complete we can begin creating the first and easiets instruction set, I Type. I type are our simple functions done by the ALU.  
 |Binary|Opperation||
 |---|---|---|
 |0000|ADD||
