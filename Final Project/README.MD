@@ -175,6 +175,20 @@ Creates 32 D flip flops per register address creating a sort of hash table of re
 ![IMG](img/REGZOOM.PNG)  
 ![IMG](img/REG2.PNG)  
 
+## R Type Instructions
+With our ALU and RegisterFile complete we can begin creating the first and easiets instruction set, R Type. R type are our simple functions done by the ALU.  
+|Binary|Opperation||
+|0000|ADD||
+|0001|SUB||
+|0010|AND||
+|0011|OR||
+|0100|XOR||
+|0101|SLL||
+|0110|SRL||
+|0111|SRA||
+|1000|SLT||
+|1001|SLTU||  
+
 ## Controller and ROM  
 *TODO:*  
 Updated FSM Diagram (mermaid)  
