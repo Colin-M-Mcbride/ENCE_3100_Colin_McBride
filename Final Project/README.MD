@@ -174,8 +174,8 @@ Creates 32 D flip flops per register address creating a sort of hash table of re
 ![IMG](img/REGZOOM.PNG)  
 ![IMG](img/REG2.PNG)  
 
-## I Type Instructions
-With our ALU and RegisterFile complete we can begin creating the first and easiets instruction set, I Type. I type are our simple functions done by the ALU.  
+## R Type Instructions
+With our ALU and RegisterFile complete we can begin creating the first and easiets instruction set, R Type. R type are our simple functions done by the ALU.  
 |Binary|Opperation||
 |---|---|---|
 |0000|ADD||
