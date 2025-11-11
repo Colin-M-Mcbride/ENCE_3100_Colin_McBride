@@ -77,6 +77,7 @@ With our ALU complete we can begin creating and understanding the first instruct
 |0111|SRA|Shift right arthmatic|
 |1000|SLT|Set less than|
 |1001|SLTU|Set less than unsigned|  
+
 Upon completion of the M extenstension the table will be updated with the following: 
 |Binary|Opperation|Explaination|
 |---|---|---|
