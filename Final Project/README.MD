@@ -27,7 +27,7 @@ module Arithmetic_Unit (
     localparam SLL  = 4'b0110;  // Shift left logical
     localparam SRL  = 4'b0111;  // Shift right logical
     localparam SRA  = 4'b1000;  // Shift right arithmetic
-	localparam STLU = 4'b1001: result = (a < b) ? 1 : 0; // Set Less Than Unsigned
+	localparam STLU = 4'b1001;  // Set Less Than Unsigned
     always @(*) begin
         case(ALU_Control)
             ADD:  ALU_Result = A + B;
@@ -39,7 +39,7 @@ module Arithmetic_Unit (
             SLL:  ALU_Result = A << B[4:0];
             SRL:  ALU_Result = A >> B[4:0];
             SRA:  ALU_Result = $signed(A) >>> B[4:0];
-            MUL:  ALU_Result = (A * B);  // Uses DSP blocks
+            STLU:  ALU_Result = result = (a < b) ? 1 : 0;
             default: ALU_Result = 32'd0;
         endcase
     end
