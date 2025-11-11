@@ -63,6 +63,24 @@ Arithmetic_Unit (
 );
 endmodule
 ```
+## R Type Instructions
+With our ALU complete we can begin creating and understanding the first instruction set, R Type. R type are our simple functions done by the ALU.  
+|Binary|Opperation|Explaination|
+|---|---|---|
+|0000|ADD|Adding two values|
+|0001|SUB|Subtracting two values|
+|0010|AND|And operation|
+|0011|OR|Or operation|
+|0100|XOR|Exclusive or opperation|
+|0101|SLL|Shift logical left|
+|0110|SRL|Shfit logical right|
+|0111|SRA|Shift right arthmatic|
+|1000|SLT|Set less than|
+|1001|SLTU|Set less than unsigned|  
+Upon completion of the M extenstension the table will be updated with the following
+|Binary|Opperation|Explaination|
+|---|---|---|
+|1010|MULT|Multiply two values|  
 ## Registers
 ### RegisterFile.v
 ```verilog
@@ -174,20 +192,6 @@ Creates 32 D flip flops per register address creating a sort of hash table of re
 ![IMG](img/REGZOOM.PNG)  
 ![IMG](img/REG2.PNG)  
 
-## R Type Instructions
-With our ALU and RegisterFile complete we can begin creating the first and easiets instruction set, R Type. R type are our simple functions done by the ALU.  
-|Binary|Opperation||
-|---|---|---|
-|0000|ADD||
-|0001|SUB||
-|0010|AND||
-|0011|OR||
-|0100|XOR||
-|0101|SLL||
-|0110|SRL||
-|0111|SRA||
-|1000|SLT||
-|1001|SLTU||  
 
 ## Controller and ROM  
 *TODO:*  
