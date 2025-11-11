@@ -186,10 +186,8 @@ endmodule
 Truly absurd   
 
 The line of code in RegisterFile.v: 
-```verilog
-reg [31:0] registers [0:31]; // A register of registers
-```  
-Creates 32 D flip flops per register address creating a sort of hash table of registers where each registers address is the key and each sub register are the buckets. This can be seen in the RTL Viewer built into verilog.  
+`reg [31:0] registers [0:31];` - Creates 32 D flip flops per register address creating a sort of hash table of registers where each registers address is the key and each sub register are the buckets. This can be seen in the RTL Viewer built into verilog.  
+
 ![IMG](img/REGZOOM.PNG)  
 ![IMG](img/REG2.PNG)  
 
