@@ -222,7 +222,7 @@ module ProgramCounter (
         endcase
     end
     
-    // Sequential logic for PC register (same structure as your original!)
+    // Sequential logic for PC register
     always @(posedge MainClock) begin
         if (reset)
             PC <= 32'b0;              // Reset to address 0
@@ -242,3 +242,4 @@ Updated FSM Diagram (mermaid)
 Updated ROM table  
 **after this point we have essenially built what we need.**
 
+##Final test, fibonachi sequence, referancing previous registers and using jumping for a loop. 
