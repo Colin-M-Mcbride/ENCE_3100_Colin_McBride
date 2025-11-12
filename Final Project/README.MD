@@ -3,6 +3,7 @@
 # Total TODO:  
 *RTL for modules*   
 adding RTL's for every module is just absurd  
+More explanations of certian things for easier readability + explanation of failures.  
 ---
 ![IMG](img/RISC-V.PNG)
 
