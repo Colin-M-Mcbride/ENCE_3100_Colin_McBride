@@ -2,137 +2,147 @@ ENCE 3100 with Professor Goncalo Fernandes Pereira Martins
 
 ```mermaid
 classDiagram
-    class DataViewerApp {
-        -TemperatureDataManager dataManager
-        -UserInterface ui
-        -ViewSettings settings
-        -PlotRenderer plotRenderer
-        +main(String[] args)
-        +run()
-        -initialize()
+    %% STRATEGY PATTERN - Visualization Strategies
+    class VisualizationStrategy {
+        <<interface>>
+        +getColor(Double temperature, int month, PlotData plotData) Color
     }
-
-    class TemperatureDataManager {
-        -List~TemperatureRecord~ allData
-        -String currentCountry
-        -List~String~ availableStates
-        -int minYear
-        -int maxYear
-        +loadDataFile(String filename)
-        +setCountry(String country)
-        +getStatesForCountry() List~String~
-        +getFilteredData(ViewSettings settings) List~TemperatureRecord~
-        +getMinYear() int
-        +getMaxYear() int
-        +getAvailableCountries() List~String~
+    
+    class RawVisualizationStrategy {
+        -ColorMapper colorMapper
+        +getColor(Double temperature, int month, PlotData plotData) Color
     }
-
-    class TemperatureRecord {
-        -String country
-        -String state
-        -int year
-        -int month
-        -double temperature
-        +TemperatureRecord(String country, String state, int year, int month, double temp)
-        +getCountry() String
-        +getState() String
-        +getYear() int
-        +getMonth() int
-        +getTemperature() double
+    
+    class ExtremaVisualizationStrategy {
+        -ColorMapper colorMapper
+        +getColor(Double temperature, int month, PlotData plotData) Color
     }
-
-    class ViewSettings {
+    
+    %% TEMPLATE METHOD PATTERN - Renderers
+    class DataRenderer {
+        <<abstract>>
+        #Draw window
+        #VisualizationStrategy strategy
+        +render(UserSettings settings, PlotData plotData) void
+        +setStrategy(VisualizationStrategy strategy) void
+        #setupCanvas() void
+        #drawBackground() void
+        #drawAxes(UserSettings settings) void
+        #drawDataVisualization(UserSettings settings, PlotData plotData)* void
+        #drawLabels(UserSettings settings) void
+        #drawTitle(UserSettings settings) void
+    }
+    
+    class HeatMapRenderer {
+        +HeatMapRenderer(Draw window)
+        #drawDataVisualization(UserSettings settings, PlotData plotData) void
+    }
+    
+    class BarChartRenderer {
+        +BarChartRenderer(Draw window)
+        #drawDataVisualization(UserSettings settings, PlotData plotData) void
+    }
+    
+    class LineGraphRenderer {
+        +LineGraphRenderer(Draw window)
+        #drawDataVisualization(UserSettings settings, PlotData plotData) void
+    }
+    
+    %% Existing Classes from Milestone 1
+    class DataViewerController {
+        -Draw window
+        -DataLoader dataLoader
+        -ViewManager viewManager
+        -TemperatureDataset dataset
+        -UserSettings settings
+        -PlotData plotData
+        +DataViewerController(String dataFilePath)
+        +keyPressed(int key) void
+        -handleCountrySelection() boolean
+        -handleStateSelection() boolean
+        -handleRendererSelection() boolean
+        -handleVisualizationSelection() boolean
+    }
+    
+    class ViewManager {
+        -MainMenuView mainMenuView
+        -DataRenderer currentRenderer
+        -int currentMode
+        +ViewManager(Draw window)
+        +showMainMenu(UserSettings settings) void
+        +showPlot(UserSettings settings, PlotData plotData) void
+        +setRenderer(DataRenderer renderer) void
+        +getCurrentMode() int
+    }
+    
+    class UserSettings {
         -String selectedCountry
         -String selectedState
-        -int startYear
-        -int endYear
-        -VisualizationType visualizationType
-        +ViewSettings()
-        +setCountry(String country)
-        +setState(String state)
-        +setStartYear(int year)
-        +setEndYear(int year)
-        +setVisualizationType(VisualizationType type)
+        -Integer startYear
+        -Integer endYear
+        -String visualizationMode
         +getSelectedCountry() String
-        +getSelectedState() String
-        +getStartYear() int
-        +getEndYear() int
-        +getVisualizationType() VisualizationType
-        +isValid() boolean
+        +setSelectedCountry(String country) void
+        +getVisualizationMode() String
+        +setVisualizationMode(String mode) void
     }
-
-    class VisualizationType {
-        <<enumeration>>
-        RAW
-        EXTREMA
-    }
-
-    class UserInterface {
-        -Scanner scanner
-        -ViewSettings settings
-        -TemperatureDataManager dataManager
-        +UserInterface(TemperatureDataManager manager, ViewSettings settings)
-        +displayMainMenu()
-        +handleUserInput() MenuAction
-        +promptForState() String
-        +promptForCountry() String
-        +promptForYear(String prompt, int min, int max) int
-        +promptForVisualization() VisualizationType
-        -displayCurrentSettings()
-    }
-
-    class MenuAction {
-        <<enumeration>>
-        CHANGE_STATE
-        CHANGE_COUNTRY
-        CHANGE_START_YEAR
-        CHANGE_END_YEAR
-        CHANGE_VISUALIZATION
-        PLOT
-        QUIT
-        INVALID
-    }
-
-    class PlotRenderer {
-        -ViewSettings settings
-        -TemperatureColorMapper colorMapper
-        +PlotRenderer(ViewSettings settings)
-        +renderPlot(List~TemperatureRecord~ data)
-        +displayPlotMenu()
-        +handlePlotInput() PlotAction
-        -renderRawView(List~TemperatureRecord~ data)
-        -renderExtremaView(List~TemperatureRecord~ data)
-        -calculateExtremaThresholds(List~TemperatureRecord~ data) Map
-    }
-
-    class PlotAction {
-        <<enumeration>>
-        RETURN_TO_MENU
-        QUIT
-    }
-
-    class TemperatureColorMapper {
-        +getColorForTemperature(double temp, double min, double max) String
-        +getExtremaColor(double temp, double monthMin, double monthMax) String
-        -isInExtremaRange(double temp, double min, double max) boolean
-        -interpolateColor(double value, double min, double max) String
-    }
-
-    DataViewerApp "1" --> "1" TemperatureDataManager : uses
-    DataViewerApp "1" --> "1" UserInterface : uses
-    DataViewerApp "1" --> "1" ViewSettings : uses
-    DataViewerApp "1" --> "1" PlotRenderer : uses
     
-    TemperatureDataManager "1" --> "*" TemperatureRecord : manages
+    class PlotData {
+        -TreeMap monthlyData
+        -TreeMap monthlyMaxValues
+        -TreeMap monthlyMinValues
+        +calculateFromDataset(TemperatureDataset dataset, UserSettings settings) void
+        +getTemperature(int month, int year) Double
+        +getMinValue(int month) Double
+        +getMaxValue(int month) Double
+    }
     
-    UserInterface "1" --> "1" TemperatureDataManager : queries
-    UserInterface "1" --> "1" ViewSettings : modifies
-    UserInterface ..> MenuAction : returns
+    class TemperatureDataset {
+        -List~TemperatureRecord~ records
+        -SortedSet~String~ states
+        -SortedSet~Integer~ years
+        +addRecord(TemperatureRecord record) void
+        +getRecordsInRange(String state, int start, int end) List
+        +getStates() SortedSet
+        +getYears() SortedSet
+    }
     
-    ViewSettings "1" --> "1" VisualizationType : uses
+    class ColorMapper {
+        +getColorForTemperature(Double temp, boolean grayscale) Color
+        +getExtremaColor(Double temp, Double min, Double max) Color
+    }
     
-    PlotRenderer "1" --> "1" ViewSettings : reads
-    PlotRenderer "1" --> "1" TemperatureColorMapper : uses
-    PlotRenderer ..> PlotAction : returns
+    class MainMenuView {
+        -Draw window
+        +render(UserSettings settings) void
+    }
+    
+    %% STRATEGY PATTERN RELATIONSHIPS
+    VisualizationStrategy <|.. RawVisualizationStrategy : implements
+    VisualizationStrategy <|.. ExtremaVisualizationStrategy : implements
+    
+    %% TEMPLATE METHOD PATTERN RELATIONSHIPS
+    DataRenderer <|-- HeatMapRenderer : extends
+    DataRenderer <|-- BarChartRenderer : extends
+    DataRenderer <|-- LineGraphRenderer : extends
+    DataRenderer o-- VisualizationStrategy : uses
+    
+    %% CONTROLLER RELATIONSHIPS
+    DataViewerController --> ViewManager : uses
+    DataViewerController --> UserSettings : uses
+    DataViewerController --> TemperatureDataset : uses
+    DataViewerController --> PlotData : uses
+    
+    %% VIEW MANAGER RELATIONSHIPS
+    ViewManager --> MainMenuView : manages
+    ViewManager --> DataRenderer : manages
+    
+    %% STRATEGY USES COLOR MAPPER
+    RawVisualizationStrategy --> ColorMapper : uses
+    ExtremaVisualizationStrategy --> ColorMapper : uses
+    
+    %% RENDERER USES PLOT DATA
+    DataRenderer ..> PlotData : uses
+    DataRenderer ..> UserSettings : uses
 
 ```
