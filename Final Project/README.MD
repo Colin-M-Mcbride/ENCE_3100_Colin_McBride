@@ -1,6 +1,6 @@
 # RISC-V Machine  
 ---
-![IMG](img/RISC-V.PNG)
+![IMG](img/RISC-V.PNG)  
 Oh boy
 ---
 
