@@ -772,6 +772,225 @@ Every RISC-V instruction is 32 bits, organized into 6 different formats:
 
 **Result:** `ADD x3, x1, x2` (x3 = x1 + x2)
 
+## Data Memory - RAM
+### DataMemory.v
+The data memory is where loads and stores actually happen. It's byte-addressable RAM that supports different access sizes.
+
+```verilog
+`default_nettype none
+
+module DataMemory (
+    input clk,
+    input reset,
+    input [31:0] addr,              // Byte address
+    input [31:0] write_data,        // Data to write
+    input mem_read,                 // Read enable
+    input mem_write,                // Write enable
+    input [2:0] funct3,             // Determines size/signedness
+    output reg [31:0] read_data
+);
+
+    // Memory array: 1024 words = 4KB of RAM
+    reg [31:0] memory [0:1023];
+    
+    // Word address and byte offset
+    wire [9:0] word_addr = addr[11:2];
+    wire [1:0] byte_offset = addr[1:0];
+    
+    // Temp storage
+    reg [31:0] word_data;
+    reg [15:0] halfword_data;
+    reg [7:0] byte_data;
+    
+    // Initialize to zero
+    integer i;
+    initial begin
+        for (i = 0; i < 1024; i = i + 1)
+            memory[i] = 32'h00000000;
+    end
+    
+    // Write operations (Store instructions)
+    always @(posedge clk) begin
+        if (mem_write && !reset) begin
+            case (funct3)
+                // SW - Store Word
+                3'b010: memory[word_addr] <= write_data;
+                
+                // SH - Store Halfword
+                3'b001: begin
+                    case (byte_offset[1])
+                        1'b0: memory[word_addr][15:0]  <= write_data[15:0];
+                        1'b1: memory[word_addr][31:16] <= write_data[15:0];
+                    endcase
+                end
+                
+                // SB - Store Byte
+                3'b000: begin
+                    case (byte_offset)
+                        2'b00: memory[word_addr][7:0]   <= write_data[7:0];
+                        2'b01: memory[word_addr][15:8]  <= write_data[7:0];
+                        2'b10: memory[word_addr][23:16] <= write_data[7:0];
+                        2'b11: memory[word_addr][31:24] <= write_data[7:0];
+                    endcase
+                end
+            endcase
+        end
+    end
+    
+    // Read operations (Load instructions)
+    always @(*) begin
+        read_data = 32'h00000000;
+        
+        if (mem_read) begin
+            word_data = memory[word_addr];
+            
+            case (funct3)
+                // LW - Load Word
+                3'b010: read_data = word_data;
+                
+                // LH - Load Halfword (signed)
+                3'b001: begin
+                    halfword_data = byte_offset[1] ? word_data[31:16] : word_data[15:0];
+                    read_data = {{16{halfword_data[15]}}, halfword_data};
+                end
+                
+                // LHU - Load Halfword Unsigned
+                3'b101: begin
+                    halfword_data = byte_offset[1] ? word_data[31:16] : word_data[15:0];
+                    read_data = {16'h0000, halfword_data};
+                end
+                
+                // LB - Load Byte (signed)
+                3'b000: begin
+                    case (byte_offset)
+                        2'b00: byte_data = word_data[7:0];
+                        2'b01: byte_data = word_data[15:8];
+                        2'b10: byte_data = word_data[23:16];
+                        2'b11: byte_data = word_data[31:24];
+                    endcase
+                    read_data = {{24{byte_data[7]}}, byte_data};
+                end
+                
+                // LBU - Load Byte Unsigned
+                3'b100: begin
+                    case (byte_offset)
+                        2'b00: byte_data = word_data[7:0];
+                        2'b01: byte_data = word_data[15:8];
+                        2'b10: byte_data = word_data[23:16];
+                        2'b11: byte_data = word_data[31:24];
+                    endcase
+                    read_data = {24'h000000, byte_data};
+                end
+            endcase
+        end
+    end
+
+endmodule
+
+`default_nettype wire
+```
+
+### How Memory Addressing Works
+
+**Byte-Addressable Memory:**
+RISC-V uses byte addresses, but we store data as 32-bit words. This means:
+
+```
+Address:    0    1    2    3    4    5    6    7    8    ...
+           [---- Word 0 ----][---- Word 1 ----][---- Word 2 ----]
+           [Byte0-1-2-3][Byte0-1-2-3][Byte0-1-2-3]
+```
+
+For address `0x0000000C` (decimal 12):
+- Bits [11:2] = word address = 3 → which 32-bit word
+- Bits [1:0] = byte offset = 0 → which byte within that word
+
+**Example:** Memory word 2 contains `0x12345678`
+- Address 8 (byte 0): `0x78`
+- Address 9 (byte 1): `0x56`
+- Address 10 (byte 2): `0x34`
+- Address 11 (byte 3): `0x12`
+
+### Sign Extension vs Zero Extension
+
+This is crucial for understanding signed vs unsigned loads:
+
+**Signed loads (LB, LH):**
+```
+Load byte 0xFF:
+  LB  → 0xFFFFFFFF (sign-extended, treats as -1)
+  LBU → 0x000000FF (zero-extended, treats as 255)
+```
+
+**Why it matters:**
+- Signed: preserves the value of negative numbers
+- Unsigned: treats all values as positive
+
+**Example:**
+```
+Memory[0] = 0x000000FF
+
+LB from address 0:
+  → Byte is 0xFF
+  → Sign bit (bit 7) is 1
+  → Sign-extend: 0xFFFFFFFF = -1 (signed interpretation)
+
+LBU from address 0:
+  → Byte is 0xFF
+  → Zero-extend: 0x000000FF = 255 (unsigned interpretation)
+```
+
+### Partial Writes
+
+Store instructions only modify the bytes they target:
+
+```
+Initial:  Memory[2] = 0x12345678
+
+SB to address 8 (word 2, byte 0), data = 0xAB:
+  → Memory[2] = 0x123456AB (only byte 0 changed)
+
+SH to address 8 (word 2, bytes 0-1), data = 0xCDEF:
+  → Memory[2] = 0x1234CDEF (only bytes 0-1 changed)
+
+SW to address 8 (word 2), data = 0xAABBCCDD:
+  → Memory[2] = 0xAABBCCDD (entire word replaced)
+```
+
+### Load/Store Operations Summary
+
+| Instruction | Size | Extension | Funct3 |
+|-------------|------|-----------|--------|
+| LB | 8-bit | Sign | 000 |
+| LH | 16-bit | Sign | 001 |
+| LW | 32-bit | None | 010 |
+| LBU | 8-bit | Zero | 100 |
+| LHU | 16-bit | Zero | 101 |
+| SB | 8-bit | N/A | 000 |
+| SH | 16-bit | N/A | 001 |
+| SW | 32-bit | N/A | 010 |
+
+### Testing the Data Memory
+
+You can test the RAM on your FPGA with this test harness:
+
+```verilog
+// Use switches to select operation and address
+// KEY[0] = reset, KEY[1] = execute
+// SW[9:7] = operation (000=SW, 001=SH, 010=SB, 011=LW, 100=LH, 101=LB)
+// SW[6:0] = address
+// Display shows read data on 7-segment displays
+```
+
+**Test sequence:**
+1. Write word `0x12345678` to address 0
+2. Read it back → should see `12345678` on display
+3. Write byte `0xAB` to address 1
+4. Read word from address 0 → should see `1234AB78`
+5. Read byte from address 1 → should see `000000AB`
+
+This proves partial writes work correctly!
+
 ---
 
 ## Module Progress Tracker
@@ -783,12 +1002,14 @@ Every RISC-V instruction is 32 bits, organized into 6 different formats:
 - Branch Unit (target calculation for branches, JAL, JALR)
 - Immediate Generator (all 6 instruction formats)
 - Control Unit FSM (complete RV32I support)
+- Data Memory (4KB RAM with byte/halfword/word access)
 
 □ **To Do:**
 - Instruction Memory (ROM for program storage)
-- Data Memory (RAM for loads/stores)
 - Top-level integration module
 - Full system testing
+
+---
 
 ---
 ## Architecture Overview
@@ -939,7 +1160,7 @@ Write actual programs:
 
 ## Final Notes
 
-I bit off more than I can chew. But that said this
+I bit off more than I can chew. But that said this was undoubtly the most fun project in my academic carreer. 
 
 Building this in Verilog for an FPGA made the concepts concrete. Seeing the RTL viewer show actual flip-flops and multiplexers made it click - this isn't abstract computer science, it's actual hardware that you can touch.  
 **Special thanks to Dr. Goncalo Martins and Dr. Daniel Stevenson**
