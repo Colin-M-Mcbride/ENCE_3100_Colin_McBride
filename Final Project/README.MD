@@ -87,7 +87,12 @@ endmodule
 |1000|SRA|Shift right arithmetic (preserves sign)|
 |1001|SLTU|Set less than unsigned|  
 
-Upon completion of the M extension: 
+### Notes on Shifts
+- **SLL/SRL**: Logical shifts fill with zeros
+- **SRA**: Arithmetic shift preserves the sign bit (for signed division by powers of 2)
+- Only use the lower 5 bits of B (max shift is 31 positions for 32-bit values)
+
+### M Extension  
 |Binary|Operation|Explanation|
 |---|---|---|
 |1010|MUL|Multiply two values (lower 32 bits)|
@@ -104,10 +109,7 @@ At this point we have exhausted all 16 values so we use a new system for the las
 |0001_0001|REMU|Remainder (signed)|  
 
 
-### Notes on Shifts
-- **SLL/SRL**: Logical shifts fill with zeros
-- **SRA**: Arithmetic shift preserves the sign bit (for signed division by powers of 2)
-- Only use the lower 5 bits of B (max shift is 31 positions for 32-bit values)
+
 
 ### ALU Test Driver
 Quick test harness for the FPGA board:
