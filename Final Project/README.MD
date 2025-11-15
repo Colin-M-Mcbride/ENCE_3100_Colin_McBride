@@ -90,7 +90,19 @@ endmodule
 Upon completion of the M extension: 
 |Binary|Operation|Explanation|
 |---|---|---|
-|1010|MUL|Multiply two values|  
+|1010|MUL|Multiply two values (lower 32 bits)|
+|1011|MULH|Multiply High (signed × signed, upper 32 bits)|
+|1100|MULHSU|Multiply High Signed-Unsigned (signed × unsigned, upper 32 bits)|
+|1101|MULHU|Multiply High Unsigned (unsigned × unsigned, upper 32 bits)|
+|1110|DIV|Divide (signed)|
+|1111|DIVU|Devide (unsigned)|  
+
+At this point we have exhausted all 16 values so we use a new system for the last 2 commands.  
+|Binary|Operation|Explanation|
+|---|---|---|
+|0001_0000|REM|Remainder (unsigned)|
+|0001_0001|REMU|Remainder (signed)|  
+
 
 ### Notes on Shifts
 - **SLL/SRL**: Logical shifts fill with zeros
