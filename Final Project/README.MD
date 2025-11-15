@@ -92,7 +92,7 @@ endmodule
 - **SRA**: Arithmetic shift preserves the sign bit (for signed division by powers of 2)
 - Only use the lower 5 bits of B (max shift is 31 positions for 32-bit values)
 
-### M Extension  
+### M Extension (Multiply/Divide) 
 |Binary|Operation|Explanation|
 |---|---|---|
 |1010|MUL|Multiply two values (lower 32 bits)|
@@ -102,14 +102,19 @@ endmodule
 |1110|DIV|Divide (signed)|
 |1111|DIVU|Devide (unsigned)|  
 
-At this point we have exhausted all 16 values so we use a new system for the last 2 commands.  
+At this point we have exhausted all 16 values for the ALU commands so we use a new system for the last 2 commands.  
 |Binary|Operation|Explanation|
 |---|---|---|
 |0001_0000|REM|Remainder (unsigned)|
 |0001_0001|REMU|Remainder (signed)|  
 
-
-
+The M extension is deceptilvey a drain on hardware it is quite simple to write in verilog `result = A * B;` what is actually going on is:  
+```
+    AAAAAAAA (32 bits)
+  × BBBBBBBB (32 bits)
+  -----------
+  RRRRRRRRRRRRRRRR (64 bits)
+```
 
 ### ALU Test Driver
 Quick test harness for the FPGA board:
