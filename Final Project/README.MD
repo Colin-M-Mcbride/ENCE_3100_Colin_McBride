@@ -920,7 +920,7 @@ Write actual programs:
 - Build testbenches earlier
 - Document control signals as I went
 - Draw more diagrams
-
+- Give myself a longer time window to work on this
 ---
 
 ## Resources
@@ -939,13 +939,7 @@ Write actual programs:
 
 ## Final Notes
 
-This project taught me that building a processor isn't magic - it's just a bunch of modules talking to each other via control signals. The FSM is the conductor, telling everyone when to do their job. Once you understand the datapath (where data flows) and the control path (what tells it where to flow), the rest is just details.
-
-The jump from VSM to RISC-V felt huge at first, but it's really just:
-- More registers (2 → 32)
-- Wider data (8-bit → 32-bit)
-- More instruction types (6 → 47)
-- Same fundamental architecture
+I bit off more than I can chew. But that said this
 
 Building this in Verilog for an FPGA made the concepts concrete. Seeing the RTL viewer show actual flip-flops and multiplexers made it click - this isn't abstract computer science, it's actual hardware that you can touch.  
 **Special thanks to Dr. Goncalo Martins and Dr. Daniel Stevenson**
