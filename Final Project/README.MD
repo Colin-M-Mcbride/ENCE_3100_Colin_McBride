@@ -1161,6 +1161,7 @@ One day
 ## Final Notes
 
 I bit off more than I could chew. Trying to build a RISC-V processor in just over a week was hard. But that said, this was undoubtedly the most fun project in my academic career. I chose to do this over something easier to bridge my knowledge gap between my Comp Sci classes and my Engineering classes. It's been cool to see how the perverbial sausage is made. Is this the end? **NO**. I have to turn my board in eventually but that said I'll keep theory crafting this project. Maybe check back in and see how it's going.  
+
 ---
-### Special Thanks yo
+## Special Thanks to
 **Dr. Goncalo Martins and Dr. Daniel Stevenson**
