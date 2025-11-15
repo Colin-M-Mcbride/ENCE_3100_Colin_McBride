@@ -1,13 +1,7 @@
 # RISC-V Machine  
---- 
-# Total TODO:  
-*RTL for modules* - adding RTL's for every module is just absurd  
-More explanations of certain things for easier readability + explanation of failures  
-Instruction Memory and Data Memory modules  
-Top-level integration and testing  
 ---
 ![IMG](img/RISC-V.PNG)
-
+Oh boy
 ---
 
 ## Overview
