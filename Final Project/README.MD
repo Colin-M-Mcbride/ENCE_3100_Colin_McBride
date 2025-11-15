@@ -1119,7 +1119,7 @@ Write actual programs:
 - **Fibonacci:** Calculate sequence
 - **Bubble sort:** Sort an array
 - **Function calls:** JAL/JALR with return addresses
-
+One day
 ---
 
 ## Lessons Learned
@@ -1128,7 +1128,7 @@ Write actual programs:
 - Breaking the project into modules
 - Testing each module independently
 - Using the same FSM structure as VSM
-- Leveraging AI for syntax help (not design help)
+- Leveraging AI for syntax help (**not design help**)
 
 **What was challenging:**
 - Immediate encoding is genuinely weird
@@ -1137,11 +1137,11 @@ Write actual programs:
 - x0 hardwiring requires constant vigilance
 
 **What I'd do differently:**
-- Start with a simpler instruction set (maybe just R/I-type)
 - Build testbenches earlier
 - Document control signals as I went
 - Draw more diagrams
 - Give myself a longer time window to work on this
+- Give myself a smaller scope
 ---
 
 ## Resources
@@ -1160,7 +1160,5 @@ Write actual programs:
 
 ## Final Notes
 
-I bit off more than I can chew. But that said this was undoubtly the most fun project in my academic carreer. 
-
-Building this in Verilog for an FPGA made the concepts concrete. Seeing the RTL viewer show actual flip-flops and multiplexers made it click - this isn't abstract computer science, it's actual hardware that you can touch.  
+I bit off more than I could chew. Trying to build a RISC-V processor in just over a week was hard. But that said, this was undoubtedly the most fun project in my academic career. I chose to do this over something easier to bridge my knowledge gap between my Comp Sci classes and my Engineering classes. It's been cool to see how the perverbial sausage is made. Is this the end? **NO**. I have to turn my board in eventually but that said I'll keep theory crafting this project. Maybe check back in and see how it's going.  
 **Special thanks to Dr. Goncalo Martins and Dr. Daniel Stevenson**
