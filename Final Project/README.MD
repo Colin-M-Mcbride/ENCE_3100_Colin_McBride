@@ -744,9 +744,151 @@ stateDiagram-v2
     EXECUTE --> WRITEBACK: clock edge
     WRITEBACK --> FETCH: clock edge
 ```
-Control Unit FSM (currently has R-type working, need to expand for I, S, B, U, J types)  
-Updated ROM table  
-**after this point we have essentially built what we need.**
+## How to Read a 32-bit Instruction
+
+Every RISC-V instruction is 32 bits, but organized differently by type. Here's the cheat sheet:
+
+---
+
+## The 6 Instruction Formats
+
+### R-Type (Register-Register)
+**Used for:** ADD, SUB, AND, OR, XOR, SLL, SRL, SRA, SLT, SLTU
+
+```
+ 31      25 24  20 19  15 14  12 11   7 6     0
+┌─────────┬──────┬──────┬──────┬──────┬───────┐
+│ funct7  │ rs2  │ rs1  │funct3│  rd  │opcode │
+└─────────┴──────┴──────┴──────┴──────┴───────┘
+```
+**Example:** `ADD x3, x1, x2` → x3 = x1 + x2
+
+---
+
+### I-Type (Immediate Operations)
+**Used for:** ADDI, ORI, ANDI, LW, LH, LB, JALR
+
+```
+ 31              20 19  15 14  12 11   7 6     0
+┌──────────────────┬──────┬──────┬──────┬───────┐
+│   immediate      │ rs1  │funct3│  rd  │opcode │
+└──────────────────┴──────┴──────┴──────┴───────┘
+```
+**Example:** `ADDI x1, x0, 5` → x1 = 5
+
+---
+
+### S-Type (Store)
+**Used for:** SW, SH, SB
+
+```
+ 31      25 24  20 19  15 14  12 11   7 6     0
+┌─────────┬──────┬──────┬──────┬──────┬───────┐
+│imm[11:5]│ rs2  │ rs1  │funct3│imm[4:0]opcode │
+└─────────┴──────┴──────┴──────┴──────┴───────┘
+```
+**Note:** Immediate is split between two locations!
+**Example:** `SW x2, 8(x1)` → memory[x1+8] = x2
+
+---
+
+### B-Type (Branch)
+**Used for:** BEQ, BNE, BLT, BGE, BLTU, BGEU
+
+```
+ 31 30   25 24  20 19  15 14  12 11  8 7 6     0
+┌──┬──────┬──────┬──────┬──────┬─────┬─┬───────┐
+│12│[10:5]│ rs2  │ rs1  │funct3│[4:1]│11 opcode│
+└──┴──────┴──────┴──────┴──────┴─────┴─┴───────┘
+```
+**Note:** Immediate is scrambled! Bit 0 always 0 (even addresses).
+**Example:** `BEQ x1, x2, 8` → if (x1==x2) PC += 8
+
+---
+
+### U-Type (Upper Immediate)
+**Used for:** LUI, AUIPC
+
+```
+ 31                      12 11   7 6     0
+┌─────────────────────────┬──────┬───────┐
+│   immediate[31:12]      │  rd  │opcode │
+└─────────────────────────┴──────┴───────┘
+```
+**Note:** Lower 12 bits are automatically 0.
+**Example:** `LUI x1, 0x12345` → x1 = 0x12345000
+
+---
+
+### J-Type (Jump)
+**Used for:** JAL
+
+```
+ 31 30    21 20 19      12 11   7 6     0
+┌──┬────────┬──┬──────────┬──────┬───────┐
+│20│ [10:1] │11│ [19:12]  │  rd  │opcode │
+└──┴────────┴──┴──────────┴──────┴───────┘
+```
+**Note:** Immediate is scrambled! Bit 0 always 0.
+**Example:** `JAL x1, 16` → x1 = PC+4, PC += 16
+
+---
+
+## Quick Reference Tables
+
+### Opcodes
+| Opcode | Format | Instruction Type |
+|--------|--------|------------------|
+| 0110011 | R-type | ADD, SUB, AND, OR, XOR, shifts |
+| 0010011 | I-type | ADDI, ANDI, ORI, XORI, shifts |
+| 0000011 | I-type | LW, LH, LB, LBU, LHU |
+| 0100011 | S-type | SW, SH, SB |
+| 1100011 | B-type | BEQ, BNE, BLT, BGE, BLTU, BGEU |
+| 1101111 | J-type | JAL |
+| 1100111 | I-type | JALR |
+| 0110111 | U-type | LUI |
+| 0010111 | U-type | AUIPC |
+
+### Funct3 for R-type and I-type Arithmetic
+| funct3 | R-type Operation | I-type Operation |
+|--------|------------------|------------------|
+| 000 | ADD/SUB* | ADDI |
+| 001 | SLL | SLLI |
+| 010 | SLT | SLTI |
+| 011 | SLTU | SLTIU |
+| 100 | XOR | XORI |
+| 101 | SRL/SRA* | SRLI/SRAI* |
+| 110 | OR | ORI |
+| 111 | AND | ANDI |
+
+*Check funct7[5]: 0=ADD/SRL, 1=SUB/SRA
+
+### Funct3 for Branches
+| funct3 | Condition |
+|--------|-----------|
+| 000 | BEQ (equal) |
+| 001 | BNE (not equal) |
+| 100 | BLT (less than signed) |
+| 101 | BGE (greater/equal signed) |
+| 110 | BLTU (less than unsigned) |
+| 111 | BGEU (greater/equal unsigned) |
+
+### Funct3 for Load/Store
+| funct3 | Load | Store | Size |
+|--------|------|-------|------|
+| 000 | LB | SB | Byte (8-bit) |
+| 001 | LH | SH | Halfword (16-bit) |
+| 010 | LW | SW | Word (32-bit) |
+| 100 | LBU | - | Byte unsigned |
+| 101 | LHU | - | Halfword unsigned |
+
+---
+
+## Decoding Example
+
+**Hex:** `0x002081B3`
+
+**Binary:** `0000000 00010 00001 000 00011 0110011`
 
 ## Module Progress Tracker
 ✅ **Completed:**
