@@ -954,4 +954,4 @@ The jump from VSM to RISC-V felt huge at first, but it's really just:
 - Same fundamental architecture
 
 Building this in Verilog for an FPGA made the concepts concrete. Seeing the RTL viewer show actual flip-flops and multiplexers made it click - this isn't abstract computer science, it's actual hardware that you can touch.  
-**Special thanks to Dr. Goncalo Martins**
+**Special thanks to Dr. Goncalo Martins and Dr. Daniel Stevenson**
