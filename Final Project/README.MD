@@ -735,7 +735,15 @@ endmodule
 
 `default_nettype wire
 ```
-Updated FSM Diagram (mermaid)  
+```mermaid
+stateDiagram-v2
+    [*] --> FETCH: reset
+    
+    FETCH --> DECODE: clock edge
+    DECODE --> EXECUTE: clock edge
+    EXECUTE --> WRITEBACK: clock edge
+    WRITEBACK --> FETCH: clock edge
+```
 Control Unit FSM (currently has R-type working, need to expand for I, S, B, U, J types)  
 Updated ROM table  
 **after this point we have essentially built what we need.**
