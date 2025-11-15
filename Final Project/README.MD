@@ -1,19 +1,45 @@
 # RISC-V Machine  
 --- 
 # Total TODO:  
-*RTL for modules*   
-adding RTL's for every module is just absurd  
-More explanations of certian things for easier readability + explanation of failures.  
+*RTL for modules* - adding RTL's for every module is just absurd  
+More explanations of certain things for easier readability + explanation of failures  
 Instruction Memory and Data Memory modules  
-Branch Unit integration  
-Control Unit FSM completion  
+Top-level integration and testing  
 ---
 ![IMG](img/RISC-V.PNG)
 
 ---
-Let's start with expanding parts from our old VSM.  
-## ALU
+
+## Overview
+
+We're building a complete RISC-V processor by expanding our old VSM (Very Simple Machine). The VSM had 2 accumulators and a simple instruction set - now we're scaling up to 32 registers and the full RISC-V RV32I instruction set.
+
+The core idea is the same: **4-stage FSM** (FETCH → DECODE → EXECUTE → WRITEBACK), but now we're handling way more instruction types and a 32-bit architecture.
+
+---
+**vs. x86:**
+- RISC-V is RISC (Reduced Instruction Set), x86 is CISC (Complex)
+- Fixed 32-bit instruction size vs. variable length
+- More registers (32 vs. 16)
+- Load/store architecture (can't do ALU ops directly on memory)
+
+**vs. ARM:**
+- Very similar! Both are RISC
+- RISC-V is open-source, ARM is proprietary
+- RISC-V has simpler instruction encoding
+- ARM has more complex conditional execution
+
+**vs. MIPS:**
+- RISC-V is heavily inspired by MIPS
+- Similar register count and philosophy
+- RISC-V has compressed instructions (C extension)
+- Better immediate encoding in RISC-V
+
+---
+## ALU - The Math Engine
 ### ALU.v
+The ALU (Arithmetic Logic Unit) does all the computational heavy lifting. Feed it two 32-bit numbers and tell it what operation to perform.
+
 ```verilog
 module Arithmetic_Unit (
     input [31:0] A,
@@ -27,7 +53,7 @@ module Arithmetic_Unit (
     localparam AND  = 4'b0010;
     localparam OR   = 4'b0011;
     localparam XOR  = 4'b0100;
-    localparam SLT  = 4'b0101;  // Set less than
+    localparam SLT  = 4'b0101;  // Set less than (signed)
     localparam SLL  = 4'b0110;  // Shift left logical
     localparam SRL  = 4'b0111;  // Shift right logical
     localparam SRA  = 4'b1000;  // Shift right arithmetic
@@ -52,7 +78,33 @@ module Arithmetic_Unit (
     assign Zero = (ALU_Result == 32'd0);
 endmodule
 ```
+
+### ALU Operations Reference
+|Binary|Operation|Explanation|
+|---|---|---|
+|0000|ADD|Adding two values|
+|0001|SUB|Subtracting two values|
+|0010|AND|Bitwise AND operation|
+|0011|OR|Bitwise OR operation|
+|0100|XOR|Exclusive OR operation|
+|0101|SLT|Set less than (signed comparison)|
+|0110|SLL|Shift logical left|
+|0111|SRL|Shift logical right|
+|1000|SRA|Shift right arithmetic (preserves sign)|
+|1001|SLTU|Set less than unsigned|  
+
+Upon completion of the M extension: 
+|Binary|Operation|Explanation|
+|---|---|---|
+|1010|MUL|Multiply two values|  
+
+### Notes on Shifts
+- **SLL/SRL**: Logical shifts fill with zeros
+- **SRA**: Arithmetic shift preserves the sign bit (for signed division by powers of 2)
+- Only use the lower 5 bits of B (max shift is 31 positions for 32-bit values)
+
 ### ALU Test Driver
+Quick test harness for the FPGA board:
 ```verilog
 /* 
 --------------------------------
@@ -60,35 +112,20 @@ ALU TEST
 --------------------------------
 */
 Arithmetic_Unit alu_test(
-    .A (SW[9:6]), // Variable values of A for testing opperations
-    .B (5'b00101), // Loading a fixed value of 5 just cause
+    .A (SW[9:6]),           // Variable values of A for testing operations
+    .B (5'b00101),          // Loading a fixed value of 5 just cause
     .ALU_Control (SW[3:0]), 
-    .ALU_Result (LEDR [6:0]), // Display binary value
-    .Zero (LEDR[9]) // If any result is 0
+    .ALU_Result (LEDR[6:0]), // Display binary value
+    .Zero (LEDR[9])          // If any result is 0
 );
 ```
-## R Type Instructions
-With our ALU complete we can begin creating and understanding the first instruction set, R Type. R type are our simple functions done by the ALU.  
-|Binary|Opperation|Explaination|
-|---|---|---|
-|0000|ADD|Adding two values|
-|0001|SUB|Subtracting two values|
-|0010|AND|And operation|
-|0011|OR|Or operation|
-|0100|XOR|Exclusive or opperation|
-|0101|SLT|Set less than (signed)|
-|0110|SLL|Shift logical left|
-|0111|SRL|Shift logical right|
-|1000|SRA|Shift right arithmetic|
-|1001|SLTU|Set less than unsigned|  
 
-Upon completion of the M extension the table will be updated with the following: 
-|Binary|Opperation|Explaination|
-|---|---|---|
-|1010|MUL|Multiply two values|  
+---
 
-## Registers
+## Registers - The Fast Memory
 ### RegisterFile.v
+RISC-V has 32 general-purpose registers (x0-x31). x0 is special - it's hardwired to zero and ignores writes.
+
 ```verilog
 module RegisterFile (
     input clk,
@@ -122,21 +159,16 @@ module RegisterFile (
     
 endmodule
 ```
+
 ### Register test driver
 ```verilog
 //-------------------------------------
 // Registers test
 //-------------------------------------
-//-------------------------------------
-// Clock and Control Signals
-//-------------------------------------
 wire clk = MAX10_CLK1_50;
 wire reset = ~KEY[0];         // Press KEY[0] to reset
 wire reg_write = ~KEY[1];     // Press KEY[1] to write
 
-//-------------------------------------
-// Register File Connections
-//-------------------------------------
 wire [4:0] rs1_addr = SW[4:0];      // Lower 5 switches = read address 1
 wire [4:0] rs2_addr = 5'd1;         // Always read x1 on port 2
 wire [4:0] rd_addr = SW[9:5];       // Upper 5 switches = write address
@@ -151,13 +183,9 @@ always @(posedge clk) begin
         write_counter <= write_counter + 1;
 end
 
-// Register file outputs
 wire [31:0] rs1_data;
 wire [31:0] rs2_data;
 
-//-------------------------------------
-// Instantiate Register File
-//-------------------------------------
 RegisterFile regfile(
     .clk(clk),
     .reset(reset),
@@ -170,48 +198,50 @@ RegisterFile regfile(
     .rs2_data(rs2_data)
 );
 
-//-------------------------------------
 // Display on LEDs
-//-------------------------------------
 assign LEDR[9:5] = rd_addr;   // Show write address
 assign LEDR[4:0] = rs1_addr;  // Show read address
 
-//-------------------------------------
 // Display on 7-Segment (lower 24 bits of rs1_data)
-//-------------------------------------
 seg7Decoder hex0(.i_bin(rs1_data[3:0]),   .o_HEX(HEX0));
 seg7Decoder hex1(.i_bin(rs1_data[7:4]),   .o_HEX(HEX1));
 seg7Decoder hex2(.i_bin(rs1_data[11:8]),  .o_HEX(HEX2));
 seg7Decoder hex4(.i_bin(rs1_data[15:12]), .o_HEX(HEX4));
 seg7Decoder hex5(.i_bin(rs1_data[19:16]), .o_HEX(HEX5));
 ```
+
 ### Further Explanations of RegisterFile  
 ![IMG](img/REG.PNG)  
 Truly absurd   
 
 The line of code in RegisterFile.v: 
-`reg [31:0] registers [0:31];` - Creates 32 D flip flops per register address creating a sort of hash table of registers where each registers address is the key and each sub register are the buckets. This can be seen in the RTL Viewer built into verilog.  
+`reg [31:0] registers [0:31];` creates 32 D flip-flops per register address, essentially a hash table of registers where each register address is the key and each sub-register are the buckets. This can be seen in the RTL Viewer built into Quartus.  
 
 ![IMG](img/REGZOOM.PNG)  
 ![IMG](img/REG2.PNG)  
 
-## PC and Branch Unit
+**Why x0 is special:** RISC-V spec says x0 must always read as zero. This gives you a "free" constant and a place to throw away results you don't need. It's hardwired in hardware - any write to x0 is ignored.
+
+---
+
+## Program Counter and Branch Unit
 ### ProgramCounter.v
+The PC keeps track of which instruction we're executing. Most of the time it just increments by 4 (next instruction), but branches and jumps can change it.
+
 ```verilog
 `default_nettype none
 
 module ProgramCounter (
     input MainClock,
-    input reset,              // Clear counter (renamed from ClearCounter)
-    input PCWrite,            // Enable PC update
-    input [1:0] PCSrc,        // Source select: 00=PC+4, 01=branch, 10=jump, 11=jalr
-    input [31:0] branch_target,   // Branch target address
-    input [31:0] jump_target,     // Jump target address (JAL)
-    input [31:0] jalr_target,     // JALR target from ALU
-    output reg [31:0] PC          // Program Counter (32-bit for RISC-V)
+    input reset,
+    input PCWrite,                  // Enable PC update
+    input [1:0] PCSrc,              // Source select: 00=PC+4, 01=branch, 10=jump, 11=jalr
+    input [31:0] branch_target,     // Branch target address
+    input [31:0] jump_target,       // Jump target address (JAL)
+    input [31:0] jalr_target,       // JALR target from ALU
+    output reg [31:0] PC
 );
 
-    // Internal signal for next PC value
     reg [31:0] next_pc;
     
     // Combinational logic for next PC calculation
@@ -231,7 +261,6 @@ module ProgramCounter (
             PC <= 32'b0;              // Reset to address 0
         else if (PCWrite)
             PC <= next_pc;            // Update PC when enabled
-        // else: hold current value
     end
 
 endmodule
@@ -239,14 +268,18 @@ endmodule
 `default_nettype wire
 ```
 
+**Why PC increments by 4:** Instructions are 32 bits = 4 bytes. Addresses point to bytes, so we skip ahead 4 bytes to get to the next instruction.
+
 ### BranchUnit.v
+Calculates where branches and jumps should go. Branches and JAL are PC-relative (PC + offset), JALR is register-relative (rs1 + offset).
+
 ```verilog
 `default_nettype none
 
 module BranchUnit (
-    input [31:0] PC,              // Current program counter
-    input [31:0] rs1_data,        // Register rs1 value (for JALR)
-    input [31:0] immediate,       // Immediate value from instruction
+    input [31:0] PC,
+    input [31:0] rs1_data,
+    input [31:0] immediate,
     
     output [31:0] branch_target,  // Branch target: PC + imm
     output [31:0] jump_target,    // JAL target: PC + imm
@@ -265,9 +298,13 @@ endmodule
 `default_nettype wire
 ```
 
+**Why clear the LSB for JALR?** Instructions must be aligned to 4-byte boundaries. The LSB being 0 guarantees this. Trying to jump to an odd address would be a bug.
+
+---
+
 ## Immediate Generator
 ### ImmediateGenerator.v
-The immediate generator extracts and sign-extends immediate values from RISC-V instructions. RISC-V has 6 different instruction formats (R, I, S, B, U, J), and each one packs the immediate bits differently. This module handles all of them.
+RISC-V instructions pack immediate values in different bit positions depending on type. This module extracts and reassembles them.
 
 ```verilog
 `default_nettype none
@@ -280,59 +317,45 @@ module ImmediateGenerator (
     wire [6:0] opcode;
     assign opcode = instruction[6:0];
     
-    // Immediate extraction is purely combinational
     always @(*) begin
         case (opcode)
             // I-type: ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
             // Also: Load instructions (LB, LH, LW, LBU, LHU) and JALR
-            7'b0010011, // I-type arithmetic
-            7'b0000011, // Load instructions
-            7'b1100111: // JALR
+            7'b0010011, 7'b0000011, 7'b1100111:
                 begin
-                    // Sign-extend 12-bit immediate
                     immediate = {{20{instruction[31]}}, instruction[31:20]};
                 end
             
             // S-type: Store instructions (SB, SH, SW)
             7'b0100011:
                 begin
-                    // Sign-extend split immediate: [31:25] and [11:7]
                     immediate = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]};
                 end
             
             // B-type: Branch instructions (BEQ, BNE, BLT, BGE, BLTU, BGEU)
             7'b1100011:
                 begin
-                    // Sign-extend and reorder branch immediate
                     immediate = {{19{instruction[31]}}, 
-                                instruction[31],      // imm[12]
-                                instruction[7],       // imm[11]
-                                instruction[30:25],   // imm[10:5]
-                                instruction[11:8],    // imm[4:1]
-                                1'b0};                // imm[0] = 0 (always even)
+                                instruction[31], instruction[7],
+                                instruction[30:25], instruction[11:8],
+                                1'b0};
                 end
             
             // U-type: LUI, AUIPC
-            7'b0110111, // LUI
-            7'b0010111: // AUIPC
+            7'b0110111, 7'b0010111:
                 begin
-                    // Upper 20 bits, lower 12 bits = 0
                     immediate = {instruction[31:12], 12'b0};
                 end
             
             // J-type: JAL
             7'b1101111:
                 begin
-                    // Sign-extend and reorder jump immediate
                     immediate = {{11{instruction[31]}},
-                                instruction[31],      // imm[20]
-                                instruction[19:12],   // imm[19:12]
-                                instruction[20],      // imm[11]
-                                instruction[30:21],   // imm[10:1]
-                                1'b0};                // imm[0] = 0 (always even)
+                                instruction[31], instruction[19:12],
+                                instruction[20], instruction[30:21],
+                                1'b0};
                 end
             
-            // R-type and unknown: no immediate
             default:
                 begin
                     immediate = 32'b0;
@@ -345,99 +368,73 @@ endmodule
 `default_nettype wire
 ```
 
-### Why Immediates Are Weird in RISC-V
-RISC-V packs immediate bits in different positions depending on instruction type to keep the register fields (rs1, rs2, rd) in consistent locations across all formats. This makes decoding hardware simpler even though it makes the immediate extraction look complicated.
+### Why Immediates Are Scrambled
+RISC-V keeps register fields (rs1, rs2, rd) in the same bit positions across all instruction formats. This makes hardware decoding simpler. The immediate bits fill in the remaining space wherever they fit, which means they're scattered differently in each format. The ImmediateGenerator fixes this mess.
 
-For example:
-- **I-type**: immediate in bits [31:20] - straightforward
-- **S-type**: split between [31:25] and [11:7] - need to concatenate
-- **B-type**: scrambled and shifted - bits out of order, LSB is always 0
-- **J-type**: even more scrambled - 20-bit offset for bigger jumps
+**Sign extension:** The `{{20{instruction[31]}}, ...}` syntax replicates bit 31 (the sign bit) 20 times. This turns a 12-bit signed number into a 32-bit signed number without changing its value.
 
-The `{{20{instruction[31]}}, ...}` syntax replicates the sign bit 20 times for sign extension.
+---
 
-## Controller and FSM 
+## Control Unit - The Brain
+### RISCV_Controller.v
+This is where all the magic happens. The controller is a 4-stage FSM that orchestrates every other module. It looks at the current state and the instruction opcode, then sets control signals telling everyone what to do.
+
 ```verilog
 `default_nettype none
-
-// ============================================================================
-// RISC-V Control Unit FSM
-// This is the "brain" of your processor - it controls all the other modules
-// ============================================================================
 
 module RISCV_Controller (
     input clk,
     input reset,
-    
-    // Instruction fields (from instruction register)
     input [6:0] opcode,
     input [2:0] funct3,
     input [6:0] funct7,
-    
-    // ALU status flags (for branches)
     input alu_zero,
     input alu_less_than,
     
-    // Control outputs - these signals tell other modules what to do
-    output reg RegWrite,        // 1 = write to register file
-    output reg ALUSrc,          // 0 = use rs2, 1 = use immediate
-    output reg [3:0] ALUOp,     // which ALU operation to perform
-    output reg MemRead,         // 1 = read from data memory
-    output reg MemWrite,        // 1 = write to data memory
-    output reg MemToReg,        // 0 = write ALU result, 1 = write memory data
-    output reg PCWrite,         // 1 = update program counter
-    output reg IRWrite,         // 1 = load instruction register
-    output reg [1:0] PCSrc,     // 00=PC+4, 01=branch, 10=JAL, 11=JALR
-    
-    // State output (for debugging)
+    output reg RegWrite,
+    output reg ALUSrc,
+    output reg [3:0] ALUOp,
+    output reg MemRead,
+    output reg MemWrite,
+    output reg MemToReg,
+    output reg PCWrite,
+    output reg IRWrite,
+    output reg [1:0] PCSrc,
     output reg [1:0] state
 );
 
     reg [1:0] next_state;
-
-    // ========================================================================
-    // STATES - Same 4-phase structure as your VSM!
-    // ========================================================================
-    localparam [1:0] FETCH      = 2'd0;  // Get instruction from memory
-    localparam [1:0] DECODE     = 2'd1;  // Break instruction into fields
-    localparam [1:0] EXECUTE    = 2'd2;  // Do the operation
-    localparam [1:0] WRITEBACK  = 2'd3;  // Save the result
-
-    // ========================================================================
-    // OPCODES - These identify instruction types
-    // ========================================================================
-    localparam [6:0] OP_RTYPE   = 7'b0110011;  // ADD, SUB, AND, OR, XOR, etc.
-    localparam [6:0] OP_ITYPE   = 7'b0010011;  // ADDI, ANDI, ORI, etc.
-    localparam [6:0] OP_LOAD    = 7'b0000011;  // LW, LH, LB, LBU, LHU
-    localparam [6:0] OP_STORE   = 7'b0100011;  // SW, SH, SB
-    localparam [6:0] OP_BRANCH  = 7'b1100011;  // BEQ, BNE, BLT, BGE, BLTU, BGEU
-    localparam [6:0] OP_JAL     = 7'b1101111;  // JAL (jump and link)
-    localparam [6:0] OP_JALR    = 7'b1100111;  // JALR (jump register)
-    localparam [6:0] OP_LUI     = 7'b0110111;  // LUI (load upper immediate)
-    localparam [6:0] OP_AUIPC   = 7'b0010111;  // AUIPC (add upper immediate to PC)
-
-    // ========================================================================
-    // ALU OPERATIONS - Match your ALU module!
-    // ========================================================================
-    localparam [3:0] ALU_ADD    = 4'b0000;
-    localparam [3:0] ALU_SUB    = 4'b0001;
-    localparam [3:0] ALU_AND    = 4'b0010;
-    localparam [3:0] ALU_OR     = 4'b0011;
-    localparam [3:0] ALU_XOR    = 4'b0100;
-    localparam [3:0] ALU_SLT    = 4'b0101;
-    localparam [3:0] ALU_SLL    = 4'b0110;
-    localparam [3:0] ALU_SRL    = 4'b0111;
-    localparam [3:0] ALU_SRA    = 4'b1000;
-    localparam [3:0] ALU_SLTU   = 4'b1001;
-    localparam [3:0] ALU_MUL    = 4'b1010;  // For M-extension
-
-    // Internal signal for branch decision
+    
+    localparam [1:0] FETCH     = 2'd0;
+    localparam [1:0] DECODE    = 2'd1;
+    localparam [1:0] EXECUTE   = 2'd2;
+    localparam [1:0] WRITEBACK = 2'd3;
+    
+    localparam [6:0] OP_RTYPE  = 7'b0110011;
+    localparam [6:0] OP_ITYPE  = 7'b0010011;
+    localparam [6:0] OP_LOAD   = 7'b0000011;
+    localparam [6:0] OP_STORE  = 7'b0100011;
+    localparam [6:0] OP_BRANCH = 7'b1100011;
+    localparam [6:0] OP_JAL    = 7'b1101111;
+    localparam [6:0] OP_JALR   = 7'b1100111;
+    localparam [6:0] OP_LUI    = 7'b0110111;
+    localparam [6:0] OP_AUIPC  = 7'b0010111;
+    
+    localparam [3:0] ALU_ADD   = 4'b0000;
+    localparam [3:0] ALU_SUB   = 4'b0001;
+    localparam [3:0] ALU_AND   = 4'b0010;
+    localparam [3:0] ALU_OR    = 4'b0011;
+    localparam [3:0] ALU_XOR   = 4'b0100;
+    localparam [3:0] ALU_SLT   = 4'b0101;
+    localparam [3:0] ALU_SLL   = 4'b0110;
+    localparam [3:0] ALU_SRL   = 4'b0111;
+    localparam [3:0] ALU_SRA   = 4'b1000;
+    localparam [3:0] ALU_SLTU  = 4'b1001;
+    localparam [3:0] ALU_MUL   = 4'b1010;
+    
     reg take_branch;
-
-    // ========================================================================
-    // 1. STATE REGISTER (Sequential) - Same as your VSM!
-    // ========================================================================
-    // This register holds the current state and updates on every clock
+    
+    // State register
     always @(posedge clk) begin
         if (reset)
             state <= FETCH;
@@ -445,14 +442,8 @@ module RISCV_Controller (
             state <= next_state;
     end
     
-    // ========================================================================
-    // 2. NEXT STATE LOGIC (Combinational) - Same as your VSM!
-    // ========================================================================
-    // This determines what state comes next
-    // In a 4-stage pipeline: FETCH -> DECODE -> EXECUTE -> WRITEBACK -> repeat
+    // Next state logic
     always @(*) begin
-        next_state = state; // default: stay in current state
-        
         case (state)
             FETCH:      next_state = DECODE;
             DECODE:     next_state = EXECUTE;
@@ -462,17 +453,9 @@ module RISCV_Controller (
         endcase
     end
     
-    // ========================================================================
-    // 3. OUTPUT LOGIC (Combinational) - The "Control Signals"
-    // ========================================================================
-    // This is where the magic happens! Based on the current state and
-    // instruction opcode, we set control signals that tell other modules
-    // what to do.
-    
+    // Output logic
     always @(*) begin
-        // ====================================================================
-        // DEFAULT: Set all signals to safe values (like your VSM!)
-        // ====================================================================
+        // Defaults
         RegWrite    = 1'b0;
         ALUSrc      = 1'b0;
         ALUOp       = ALU_ADD;
@@ -485,248 +468,128 @@ module RISCV_Controller (
         take_branch = 1'b0;
         
         case (state)
-            // ================================================================
-            // FETCH STATE
-            // ================================================================
-            // Goal: Load instruction from memory into instruction register
-            //       and prepare to increment PC
             FETCH:
                 begin
-                    IRWrite = 1'b1;     // Load instruction register
-                    PCWrite = 1'b1;     // Enable PC update
-                    PCSrc   = 2'b00;    // Default: PC = PC + 4
+                    IRWrite = 1'b1;
+                    PCWrite = 1'b1;
+                    PCSrc   = 2'b00;
                 end
             
-            // ================================================================
-            // DECODE STATE
-            // ================================================================
-            // Goal: Extract instruction fields and read registers
-            // Note: Register file reads happen automatically based on rs1/rs2
-            //       addresses, so we don't need any control signals here!
             DECODE:
                 begin
-                    // Nothing to do - decoding happens in other modules
+                    // Register reads happen automatically
                 end
             
-            // ================================================================
-            // EXECUTE STATE
-            // ================================================================
-            // Goal: Perform the operation specified by the instruction
-            // This is where we decode the opcode and set ALU/memory controls
             EXECUTE:
                 begin
                     case (opcode)
-                        
-                        // ========================================================
-                        // R-TYPE: Register-Register operations
-                        // Format: opcode | rd | funct3 | rs1 | rs2 | funct7
-                        // Examples: ADD x3, x1, x2  or  SUB x4, x2, x1
-                        // ========================================================
                         OP_RTYPE:
                             begin
-                                ALUSrc = 1'b0;  // ALU input B comes from rs2
-                                
-                                // Decode which ALU operation based on funct3 and funct7
+                                ALUSrc = 1'b0;
                                 case (funct3)
-                                    3'b000: ALUOp = (funct7[5]) ? ALU_SUB : ALU_ADD; // ADD or SUB
-                                    3'b001: ALUOp = ALU_SLL;   // Shift left logical
-                                    3'b010: ALUOp = ALU_SLT;   // Set less than (signed)
-                                    3'b011: ALUOp = ALU_SLTU;  // Set less than (unsigned)
-                                    3'b100: ALUOp = ALU_XOR;   // XOR
-                                    3'b101: ALUOp = (funct7[5]) ? ALU_SRA : ALU_SRL; // SRL or SRA
-                                    3'b110: ALUOp = ALU_OR;    // OR
-                                    3'b111: ALUOp = ALU_AND;   // AND
+                                    3'b000: ALUOp = (funct7[5]) ? ALU_SUB : ALU_ADD;
+                                    3'b001: ALUOp = ALU_SLL;
+                                    3'b010: ALUOp = ALU_SLT;
+                                    3'b011: ALUOp = ALU_SLTU;
+                                    3'b100: ALUOp = ALU_XOR;
+                                    3'b101: ALUOp = (funct7[5]) ? ALU_SRA : ALU_SRL;
+                                    3'b110: ALUOp = ALU_OR;
+                                    3'b111: ALUOp = ALU_AND;
                                     default: ALUOp = ALU_ADD;
                                 endcase
                             end
                         
-                        // ========================================================
-                        // I-TYPE ARITHMETIC: Register-Immediate operations
-                        // Format: opcode | rd | funct3 | rs1 | immediate[11:0]
-                        // Examples: ADDI x1, x0, 5  or  ANDI x2, x1, 0xFF
-                        // ========================================================
                         OP_ITYPE:
                             begin
-                                ALUSrc = 1'b1;  // ALU input B comes from immediate
-                                
+                                ALUSrc = 1'b1;
                                 case (funct3)
-                                    3'b000: ALUOp = ALU_ADD;   // ADDI
-                                    3'b010: ALUOp = ALU_SLT;   // SLTI
-                                    3'b011: ALUOp = ALU_SLTU;  // SLTIU
-                                    3'b100: ALUOp = ALU_XOR;   // XORI
-                                    3'b110: ALUOp = ALU_OR;    // ORI
-                                    3'b111: ALUOp = ALU_AND;   // ANDI
-                                    3'b001: ALUOp = ALU_SLL;   // SLLI
-                                    3'b101: ALUOp = (funct7[5]) ? ALU_SRA : ALU_SRL; // SRLI/SRAI
+                                    3'b000: ALUOp = ALU_ADD;
+                                    3'b010: ALUOp = ALU_SLT;
+                                    3'b011: ALUOp = ALU_SLTU;
+                                    3'b100: ALUOp = ALU_XOR;
+                                    3'b110: ALUOp = ALU_OR;
+                                    3'b111: ALUOp = ALU_AND;
+                                    3'b001: ALUOp = ALU_SLL;
+                                    3'b101: ALUOp = (funct7[5]) ? ALU_SRA : ALU_SRL;
                                     default: ALUOp = ALU_ADD;
                                 endcase
                             end
                         
-                        // ========================================================
-                        // LOAD: Read from memory
-                        // Format: opcode | rd | funct3 | rs1 | offset[11:0]
-                        // Example: LW x2, 8(x1)  means  x2 = memory[x1 + 8]
-                        // ========================================================
                         OP_LOAD:
                             begin
-                                ALUSrc   = 1'b1;     // Use immediate as offset
-                                ALUOp    = ALU_ADD;  // Calculate address: rs1 + offset
-                                MemRead  = 1'b1;     // Read from data memory
-                                MemToReg = 1'b1;     // Write memory data (not ALU) to register
+                                ALUSrc   = 1'b1;
+                                ALUOp    = ALU_ADD;
+                                MemRead  = 1'b1;
+                                MemToReg = 1'b1;
                             end
                         
-                        // ========================================================
-                        // STORE: Write to memory
-                        // Format: opcode | imm[4:0] | funct3 | rs1 | rs2 | imm[11:5]
-                        // Example: SW x2, 8(x1)  means  memory[x1 + 8] = x2
-                        // ========================================================
                         OP_STORE:
                             begin
-                                ALUSrc   = 1'b1;     // Use immediate as offset
-                                ALUOp    = ALU_ADD;  // Calculate address: rs1 + offset
-                                MemWrite = 1'b1;     // Write to data memory
-                                // Note: rs2 contains the data to write
+                                ALUSrc   = 1'b1;
+                                ALUOp    = ALU_ADD;
+                                MemWrite = 1'b1;
                             end
                         
-                        // ========================================================
-                        // BRANCH: Conditional jump
-                        // Format: opcode | imm | funct3 | rs1 | rs2 | imm
-                        // Example: BEQ x1, x2, label  means  if (x1 == x2) goto label
-                        // ========================================================
                         OP_BRANCH:
                             begin
-                                ALUSrc = 1'b0;  // Compare rs1 and rs2
-                                ALUOp  = ALU_SUB;  // Subtract to check equality/comparison
-                                
-                                // Determine if branch should be taken based on funct3
+                                ALUSrc = 1'b0;
+                                ALUOp  = ALU_SUB;
                                 case (funct3)
-                                    3'b000: take_branch = alu_zero;       // BEQ (equal)
-                                    3'b001: take_branch = ~alu_zero;      // BNE (not equal)
-                                    3'b100: take_branch = alu_less_than;  // BLT (less than signed)
-                                    3'b101: take_branch = ~alu_less_than; // BGE (greater/equal signed)
-                                    3'b110: take_branch = alu_less_than;  // BLTU (less than unsigned)
-                                    3'b111: take_branch = ~alu_less_than; // BGEU (greater/equal unsigned)
+                                    3'b000: take_branch = alu_zero;
+                                    3'b001: take_branch = ~alu_zero;
+                                    3'b100: take_branch = alu_less_than;
+                                    3'b101: take_branch = ~alu_less_than;
+                                    3'b110: take_branch = alu_less_than;
+                                    3'b111: take_branch = ~alu_less_than;
                                     default: take_branch = 1'b0;
                                 endcase
-                                
                                 if (take_branch) begin
                                     PCWrite = 1'b1;
-                                    PCSrc   = 2'b01;  // PC = PC + branch_offset
+                                    PCSrc   = 2'b01;
                                 end
                             end
                         
-                        // ========================================================
-                        // JAL: Unconditional jump and link
-                        // Format: opcode | rd | immediate[20:1]
-                        // Example: JAL x1, label  means  x1 = PC+4, goto label
-                        // ========================================================
                         OP_JAL:
                             begin
                                 PCWrite = 1'b1;
-                                PCSrc   = 2'b10;  // PC = PC + jump_offset
-                                // Will write PC+4 to rd in WRITEBACK stage
+                                PCSrc   = 2'b10;
                             end
                         
-                        // ========================================================
-                        // JALR: Jump to register and link
-                        // Format: opcode | rd | funct3 | rs1 | offset[11:0]
-                        // Example: JALR x1, 0(x2)  means  x1 = PC+4, goto (x2+0)
-                        // ========================================================
                         OP_JALR:
                             begin
-                                ALUSrc  = 1'b1;    // Use immediate as offset
-                                ALUOp   = ALU_ADD; // Calculate target: rs1 + offset
+                                ALUSrc  = 1'b1;
+                                ALUOp   = ALU_ADD;
                                 PCWrite = 1'b1;
-                                PCSrc   = 2'b11;   // PC = rs1 + offset
-                                // Will write PC+4 to rd in WRITEBACK stage
+                                PCSrc   = 2'b11;
                             end
                         
-                        // ========================================================
-                        // LUI: Load upper immediate
-                        // Format: opcode | rd | immediate[31:12]
-                        // Example: LUI x1, 0x12345  means  x1 = 0x12345000
-                        // ========================================================
-                        OP_LUI:
-                            begin
-                                // Immediate already has lower 12 bits as 0
-                                // Just need to write it to register in WRITEBACK
-                            end
-                        
-                        // ========================================================
-                        // AUIPC: Add upper immediate to PC
-                        // Format: opcode | rd | immediate[31:12]
-                        // Example: AUIPC x1, 0x1000  means  x1 = PC + 0x1000000
-                        // ========================================================
-                        OP_AUIPC:
-                            begin
-                                // Will calculate PC + immediate in datapath
-                            end
-                        
-                        default:
-                            begin
-                                // Unknown instruction - do nothing (NOP)
-                            end
+                        default: begin end
                     endcase
                 end
             
-            // ================================================================
-            // WRITEBACK STATE
-            // ================================================================
-            // Goal: Write results back to register file
             WRITEBACK:
                 begin
                     case (opcode)
-                        // R-type and I-type: Write ALU result to register
                         OP_RTYPE, OP_ITYPE:
                             begin
-                                RegWrite = 1'b1;    // Enable register write
-                                MemToReg = 1'b0;    // Write ALU result (not memory)
+                                RegWrite = 1'b1;
+                                MemToReg = 1'b0;
                             end
-                        
-                        // Load: Write data from memory to register
                         OP_LOAD:
                             begin
-                                RegWrite = 1'b1;    // Enable register write
-                                MemToReg = 1'b1;    // Write memory data (not ALU)
+                                RegWrite = 1'b1;
+                                MemToReg = 1'b1;
                             end
-                        
-                        // JAL and JALR: Write PC+4 to register (return address)
                         OP_JAL, OP_JALR:
                             begin
-                                RegWrite = 1'b1;    // Enable register write
-                                // Datapath will route PC+4 to register
+                                RegWrite = 1'b1;
                             end
-                        
-                        // LUI: Write immediate to register
-                        OP_LUI:
+                        OP_LUI, OP_AUIPC:
                             begin
-                                RegWrite = 1'b1;    // Enable register write
-                                // Immediate is already in correct form
+                                RegWrite = 1'b1;
                             end
-                        
-                        // AUIPC: Write PC+immediate to register
-                        OP_AUIPC:
-                            begin
-                                RegWrite = 1'b1;    // Enable register write
-                                // Datapath calculates PC + immediate
-                            end
-                        
-                        // Store and Branch: Don't write to registers
-                        OP_STORE, OP_BRANCH:
-                            begin
-                                RegWrite = 1'b0;    // No register write
-                            end
-                        
-                        default:
-                            begin
-                                RegWrite = 1'b0;
-                            end
+                        default: begin end
                     endcase
-                end
-            
-            default:
-                begin
-                    // All signals stay at default (safe) values
                 end
         endcase
     end
@@ -735,6 +598,8 @@ endmodule
 
 `default_nettype wire
 ```
+
+### FSM State Diagram
 ```mermaid
 stateDiagram-v2
     [*] --> FETCH: reset
@@ -744,13 +609,50 @@ stateDiagram-v2
     EXECUTE --> WRITEBACK: clock edge
     WRITEBACK --> FETCH: clock edge
 ```
-## How to Read a 32-bit Instruction
 
-Every RISC-V instruction is 32 bits, but organized differently by type. Here's the cheat sheet:
+### What Each State Does
+
+**FETCH:** Grab the next instruction from memory
+- Load instruction register
+- Prepare to update PC (default: PC+4)
+
+**DECODE:** Break the instruction apart
+- Extract opcode, rs1, rs2, rd, funct3, funct7
+- Read registers (happens automatically)
+- Generate immediate
+
+**EXECUTE:** Do the actual work
+- R-type/I-type: ALU operation
+- Load: Calculate address, read memory
+- Store: Calculate address, write memory
+- Branch: Compare and decide whether to jump
+- Jump: Calculate target
+
+**WRITEBACK:** Save the result
+- R/I-type: Write ALU result to register
+- Load: Write memory data to register
+- JAL/JALR: Write return address (PC+4) to register
+- Store/Branch: Don't write anything
+
+### Control Signals Explained
+
+**RegWrite:** Should we write to the register file? (1 = yes, 0 = no)
+
+**ALUSrc:** Where does the ALU's second input come from? (0 = rs2, 1 = immediate)
+
+**ALUOp:** Which ALU operation? (matches ALU opcodes)
+
+**MemRead/MemWrite:** Are we accessing memory?
+
+**MemToReg:** What gets written to register? (0 = ALU result, 1 = memory data)
+
+**PCSrc:** Where does next PC come from? (00=PC+4, 01=branch, 10=JAL, 11=JALR)
 
 ---
 
-## The 6 Instruction Formats
+## RISC-V Instruction Formats
+
+Every RISC-V instruction is 32 bits, organized into 6 different formats:
 
 ### R-Type (Register-Register)
 **Used for:** ADD, SUB, AND, OR, XOR, SLL, SRL, SRA, SLT, SLTU
@@ -761,9 +663,6 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 │ funct7  │ rs2  │ rs1  │funct3│  rd  │opcode │
 └─────────┴──────┴──────┴──────┴──────┴───────┘
 ```
-**Example:** `ADD x3, x1, x2` → x3 = x1 + x2
-
----
 
 ### I-Type (Immediate Operations)
 **Used for:** ADDI, ORI, ANDI, LW, LH, LB, JALR
@@ -774,9 +673,6 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 │   immediate      │ rs1  │funct3│  rd  │opcode │
 └──────────────────┴──────┴──────┴──────┴───────┘
 ```
-**Example:** `ADDI x1, x0, 5` → x1 = 5
-
----
 
 ### S-Type (Store)
 **Used for:** SW, SH, SB
@@ -787,10 +683,6 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 │imm[11:5]│ rs2  │ rs1  │funct3│imm[4:0]opcode │
 └─────────┴──────┴──────┴──────┴──────┴───────┘
 ```
-**Note:** Immediate is split between two locations!
-**Example:** `SW x2, 8(x1)` → memory[x1+8] = x2
-
----
 
 ### B-Type (Branch)
 **Used for:** BEQ, BNE, BLT, BGE, BLTU, BGEU
@@ -801,10 +693,6 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 │12│[10:5]│ rs2  │ rs1  │funct3│[4:1]│11 opcode│
 └──┴──────┴──────┴──────┴──────┴─────┴─┴───────┘
 ```
-**Note:** Immediate is scrambled! Bit 0 always 0 (even addresses).
-**Example:** `BEQ x1, x2, 8` → if (x1==x2) PC += 8
-
----
 
 ### U-Type (Upper Immediate)
 **Used for:** LUI, AUIPC
@@ -815,10 +703,6 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 │   immediate[31:12]      │  rd  │opcode │
 └─────────────────────────┴──────┴───────┘
 ```
-**Note:** Lower 12 bits are automatically 0.
-**Example:** `LUI x1, 0x12345` → x1 = 0x12345000
-
----
 
 ### J-Type (Jump)
 **Used for:** JAL
@@ -829,14 +713,10 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 │20│ [10:1] │11│ [19:12]  │  rd  │opcode │
 └──┴────────┴──┴──────────┴──────┴───────┘
 ```
-**Note:** Immediate is scrambled! Bit 0 always 0.
-**Example:** `JAL x1, 16` → x1 = PC+4, PC += 16
 
----
+### Quick Reference Tables
 
-## Quick Reference Tables
-
-### Opcodes
+**Opcodes**
 | Opcode | Format | Instruction Type |
 |--------|--------|------------------|
 | 0110011 | R-type | ADD, SUB, AND, OR, XOR, shifts |
@@ -849,9 +729,9 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 | 0110111 | U-type | LUI |
 | 0010111 | U-type | AUIPC |
 
-### Funct3 for R-type and I-type Arithmetic
-| funct3 | R-type Operation | I-type Operation |
-|--------|------------------|------------------|
+**Funct3 for R/I Arithmetic**
+| funct3 | R-type | I-type |
+|--------|--------|--------|
 | 000 | ADD/SUB* | ADDI |
 | 001 | SLL | SLLI |
 | 010 | SLT | SLTI |
@@ -863,7 +743,7 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 
 *Check funct7[5]: 0=ADD/SRL, 1=SUB/SRA
 
-### Funct3 for Branches
+**Funct3 for Branches**
 | funct3 | Condition |
 |--------|-----------|
 | 000 | BEQ (equal) |
@@ -873,7 +753,7 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 | 110 | BLTU (less than unsigned) |
 | 111 | BGEU (greater/equal unsigned) |
 
-### Funct3 for Load/Store
+**Funct3 for Load/Store**
 | funct3 | Load | Store | Size |
 |--------|------|-------|------|
 | 000 | LB | SB | Byte (8-bit) |
@@ -882,28 +762,196 @@ Every RISC-V instruction is 32 bits, but organized differently by type. Here's t
 | 100 | LBU | - | Byte unsigned |
 | 101 | LHU | - | Halfword unsigned |
 
----
-
-## Decoding Example
+### Decoding Example
 
 **Hex:** `0x002081B3`
 
 **Binary:** `0000000 00010 00001 000 00011 0110011`
 
-## Module Progress Tracker
-✅ **Completed:**
-- ALU (all base operations + SLTU)
-- Register File (32 x 32-bit registers)
-- Program Counter (with branch/jump support)
-- Branch Unit (target calculation)
-- Immediate Generator (all 6 instruction formats)
+**Breakdown:**
+- Opcode [6:0] = `0110011` → R-type
+- rd [11:7] = `00011` → x3
+- funct3 [14:12] = `000` → ADD/SUB
+- rs1 [19:15] = `00001` → x1
+- rs2 [24:20] = `00010` → x2
+- funct7 [31:25] = `0000000` → ADD (not SUB)
 
-□ **In Progress:**
-- Control Unit FSM (R-type done, expanding to other types)
+**Result:** `ADD x3, x1, x2` (x3 = x1 + x2)
+
+---
+
+## Module Progress Tracker
+
+✅ **Completed:**
+- ALU (all base operations + SLTU, ready for MUL)
+- Register File (32 x 32-bit registers with x0 hardwired to zero)
+- Program Counter (with branch/jump support)
+- Branch Unit (target calculation for branches, JAL, JALR)
+- Immediate Generator (all 6 instruction formats)
+- Control Unit FSM (complete RV32I support)
 
 □ **To Do:**
-- Instruction Memory (ROM)
-- Data Memory (for loads/stores)
-- Top-level integration
+- Instruction Memory (ROM for program storage)
+- Data Memory (RAM for loads/stores)
+- Top-level integration module
+- Full system testing
 
-## Final test, fibonacci sequence, referencing previous registers and using jumping for a loop.
+---
+## Architecture Overview
+
+Here's how all the pieces fit together:
+
+```
+┌─────────────────┐
+│ Instruction     │
+│ Memory (ROM)    │
+└────────┬────────┘
+         │
+         ↓ (32-bit instruction)
+┌─────────────────┐
+│ Instruction     │──→ opcode, rs1, rs2, rd, funct3, funct7
+│ Decoder         │
+└─────────────────┘
+         │
+         ↓
+┌─────────────────┐     ┌──────────────┐
+│ Control Unit    │────→│ Control      │
+│ (FSM)           │     │ Signals      │
+└─────────────────┘     └──────────────┘
+         │                      │
+         ↓                      ↓
+┌─────────────────┐     ┌──────────────┐
+│ Immediate       │     │ Register     │
+│ Generator       │     │ File         │
+└────────┬────────┘     └──────┬───────┘
+         │                     │
+         └──────────┬──────────┘
+                    ↓
+            ┌───────────────┐
+            │ ALU           │
+            └───────┬───────┘
+                    │
+         ┌──────────┴──────────┐
+         ↓                     ↓
+┌─────────────────┐    ┌──────────────┐
+│ Data Memory     │    │ Program      │
+│ (RAM)           │    │ Counter      │
+└─────────────────┘    └──────────────┘
+```
+
+**Data Flow:**
+1. PC points to current instruction
+2. Instruction Memory returns 32-bit instruction
+3. Decoder breaks it into fields
+4. Control Unit sets control signals based on opcode
+5. Register File reads rs1 and rs2
+6. Immediate Generator extracts immediate value
+7. ALU performs operation
+8. Result goes to Register File or Data Memory
+9. PC updates (PC+4, branch target, or jump target)
+
+---
+
+## What We Built vs. What We Started With
+
+### Old VSM:
+- 2 accumulators
+- 8-bit data
+- 6 simple instructions
+- 4-bit addresses
+- Single accumulator operations
+
+### New RISC-V Processor:
+- 32 general-purpose registers
+- 32-bit data
+- 47+ instructions (full RV32I)
+- 32-bit addresses
+- Register-to-register operations
+- Immediate operations
+- Memory loads/stores
+- Conditional branches
+- Jumps and function calls
+
+### What Stayed the Same:
+- 4-stage FSM architecture (FETCH → DECODE → EXECUTE → WRITEBACK)
+- Clock-driven sequential logic
+- Control signals orchestrating datapath
+- Same basic principles, just scaled up
+
+---
+
+## Testing Strategy
+
+### Phase 1: Component Testing
+Test each module individually:
+- ALU: All operations with known inputs
+- Register File: Read/write with x0 protection
+- PC: Incrementing and branching
+- Immediate Generator: All instruction formats
+
+### Phase 2: Instruction Type Testing
+Test by instruction category:
+1. **R-type:** `ADD x3, x1, x2`
+2. **I-type:** `ADDI x1, x0, 5`
+3. **Loads:** `LW x2, 0(x1)` (once memory is added)
+4. **Stores:** `SW x2, 4(x1)` (once memory is added)
+5. **Branches:** `BEQ x1, x2, label`
+6. **Jumps:** `JAL x1, function`
+
+### Phase 3: Real Programs
+Write actual programs:
+- **Counter:** Increment a register in a loop
+- **Fibonacci:** Calculate sequence
+- **Bubble sort:** Sort an array
+- **Function calls:** JAL/JALR with return addresses
+
+---
+
+## Lessons Learned
+
+**What worked well:**
+- Breaking the project into modules
+- Testing each module independently
+- Using the same FSM structure as VSM
+- Leveraging AI for syntax help (not design help)
+
+**What was challenging:**
+- Immediate encoding is genuinely weird
+- Branch target calculation has subtle details
+- Control signal timing is critical
+- x0 hardwiring requires constant vigilance
+
+**What I'd do differently:**
+- Start with a simpler instruction set (maybe just R/I-type)
+- Build testbenches earlier
+- Document control signals as I went
+- Draw more diagrams
+
+---
+
+## Resources
+
+**RISC-V Specs:**
+- Official RISC-V ISA Manual: https://riscv.org/technical/specifications/
+- RISC-V Card (quick reference): https://github.com/jameslzhu/riscv-card
+
+**Learning Resources:**
+- "Computer Organization and Design RISC-V Edition" by Patterson & Hennessy
+- "Digital Design and Computer Architecture RISC-V Edition" by Harris & Harris
+
+**Tools:**
+- RISC-V Instruction Encoder/Decoder: https://luplab.gitlab.io/rvcodecjs/
+- Venus RISC-V Simulator: https://venus.cs61c.org/
+
+## Final Notes
+
+This project taught me that building a processor isn't magic - it's just a bunch of modules talking to each other via control signals. The FSM is the conductor, telling everyone when to do their job. Once you understand the datapath (where data flows) and the control path (what tells it where to flow), the rest is just details.
+
+The jump from VSM to RISC-V felt huge at first, but it's really just:
+- More registers (2 → 32)
+- Wider data (8-bit → 32-bit)
+- More instruction types (6 → 47)
+- Same fundamental architecture
+
+Building this in Verilog for an FPGA made the concepts concrete. Seeing the RTL viewer show actual flip-flops and multiplexers made it click - this isn't abstract computer science, it's actual hardware that you can touch.  
+**Special thanks to Dr. Goncalo Martins**
