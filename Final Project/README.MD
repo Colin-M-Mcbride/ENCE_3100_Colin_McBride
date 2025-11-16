@@ -6,7 +6,7 @@
 We're building a complete RISC-V processor by expanding our old VSM (Very Simple Machine). The VSM had 2 accumulators and a simple instruction set - now we're scaling up to 32 registers and the full RISC-V RV32I instruction set.
 
 The core idea is the same: **4-stage FSM** (FETCH → DECODE → EXECUTE → WRITEBACK), but now we're handling way more instruction types and a 32-bit architecture.
-## What We Built vs. What We Started With
+## Lab 8 Microprocessor vs RISC-V Microprocessor
 
 ### Old VSM:
 - 2 accumulators
@@ -255,7 +255,7 @@ The line of code in RegisterFile.v:
 ![IMG](img/REGZOOM.PNG)  
 ![IMG](img/REG2.PNG)  
 
-**Why x0 is special:** RISC-V spec says x0 must always read as zero. This gives you a "free" constant and a place to throw away results you don't need. It's hardwired in hardware - any write to x0 is ignored.
+**Why x0 is special:** RISC-V spec says x0 must always read as zero. This gives you a "free" constant and a place to throw away results you don't need. It's hardwired in hardware, any write to x0 is ignored.
 
 ---
 
