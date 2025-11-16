@@ -254,9 +254,57 @@ Nightmare to make - the wire naming got really confusing tracking all the carrie
 
 ---
 
-## Part 4: [What was this supposed to be?]
+## Part 4: 8×8 Registered Multiplier
 
-**Status:** Incomplete - will finish for points recovery
+**What it does:** Implements an 8×8 multiplier using n-bit adders arranged hierarchically (instead of a 2D array of full adders like Part 3). This approach is more scalable and easier to extend to larger bit widths. Both inputs and outputs are registered.
+
+**Key difference from Part 3:** Part 3 used a 2D array of individual full adders. Part 4 abstracts rows of full adders into n-bit adders, creating a cleaner structure that accumulates partial products row-by-row.
+
+Main of part 4:
+```verilog
+//******************
+// Part IV - 8x8 Registered Multiplier
+//******************
+
+// Display inputs in hexadecimal
+seg7Decoder SEG_A1 (SW[15:12], HEX7); // A[7:4]
+seg7Decoder SEG_A0 (SW[11:8], HEX6);  // A[3:0]
+seg7Decoder SEG_B1 (SW[7:4], HEX5);   // B[7:4]
+seg7Decoder SEG_B0 (SW[3:0], HEX4);   // B[3:0]
+
+wire [15:0] w_Product;
+
+// 8x8 multiplier with registered inputs and outputs
+multiplier_8x8_reg MT_8by8_reg (
+    .i_A(SW[15:8]),       // 8-bit A from switches
+    .i_B(SW[7:0]),        // 8-bit B from switches
+    .i_clk(w_myClk),      // Clock for registers
+    .o_P(w_Product)       // 16-bit product output
+);
+
+// Display product in hexadecimal (4 digits)
+seg7Decoder SEG_P0 (w_Product[3:0], HEX0);
+seg7Decoder SEG_P1 (w_Product[7:4], HEX1);
+seg7Decoder SEG_P2 (w_Product[11:8], HEX2);
+seg7Decoder SEG_P3 (w_Product[15:12], HEX3);
+```
+
+**How it works:** 
+- Registers capture input values A and B on clock edge
+- Generate 8 partial products (A × each bit of B)
+- Use cascaded n-bit adders to accumulate shifted partial products
+- Final result is registered before output
+
+**Testing:** Try multiplying values like:
+- 15 × 15 = 225 (0xE1)
+- 255 × 2 = 510 (0x1FE)
+- 16 × 16 = 256 (0x100)
+
+*[INSERT PICTURE/GIF SHOWING 8×8 MULTIPLIER WORKING]*
+
+**Performance:**
+- Logic Elements Used: [Check Compilation Report]
+- Maximum Frequency (f_max): [Check Timing Analyzer]
 
 ---
 
