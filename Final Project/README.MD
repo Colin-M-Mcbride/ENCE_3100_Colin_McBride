@@ -1,16 +1,38 @@
 # RISC-V Machine  
 ---
-![IMG](img/RISC-V.PNG)  
-Oh boy
----
-
 ## Overview
+![IMG](img/RISC-V.PNG)  
 
 We're building a complete RISC-V processor by expanding our old VSM (Very Simple Machine). The VSM had 2 accumulators and a simple instruction set - now we're scaling up to 32 registers and the full RISC-V RV32I instruction set.
 
 The core idea is the same: **4-stage FSM** (FETCH → DECODE → EXECUTE → WRITEBACK), but now we're handling way more instruction types and a 32-bit architecture.
+## What We Built vs. What We Started With
 
+### Old VSM:
+- 2 accumulators
+- 8-bit data
+- 6 simple instructions
+- 4-bit addresses
+- Single accumulator operations
+
+### New RISC-V Processor:
+- 32 general-purpose registers
+- 32-bit data
+- 47+ instructions (full RV32I)
+- 32-bit addresses
+- Register-to-register operations
+- Immediate operations
+- Memory loads/stores
+- Conditional branches
+- Jumps and function calls
+
+### What Stayed the Same:
+- 4-stage FSM architecture (FETCH → DECODE → EXECUTE → WRITEBACK)
+- Clock-driven sequential logic
+- Control signals orchestrating datapath
+- Same basic principles, just scaled up
 ---
+## Why RISC-V? 
 **vs. x86:**
 - RISC-V is RISC (Reduced Instruction Set), x86 is CISC (Complex)
 - Fixed 32-bit instruction size vs. variable length
@@ -991,8 +1013,6 @@ SW to address 8 (word 2), data = 0xAABBCCDD:
 
 ### Testing the Data Memory
 
-You can test the RAM on your FPGA with this test harness:
-
 ```verilog
 // Use switches to select operation and address
 // KEY[0] = reset, KEY[1] = execute
@@ -1086,33 +1106,7 @@ Here's how all the pieces fit together:
 
 ---
 
-## What We Built vs. What We Started With
 
-### Old VSM:
-- 2 accumulators
-- 8-bit data
-- 6 simple instructions
-- 4-bit addresses
-- Single accumulator operations
-
-### New RISC-V Processor:
-- 32 general-purpose registers
-- 32-bit data
-- 47+ instructions (full RV32I)
-- 32-bit addresses
-- Register-to-register operations
-- Immediate operations
-- Memory loads/stores
-- Conditional branches
-- Jumps and function calls
-
-### What Stayed the Same:
-- 4-stage FSM architecture (FETCH → DECODE → EXECUTE → WRITEBACK)
-- Clock-driven sequential logic
-- Control signals orchestrating datapath
-- Same basic principles, just scaled up
-
----
 
 ## Testing Strategy
 
