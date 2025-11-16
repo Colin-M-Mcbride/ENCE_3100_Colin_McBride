@@ -1,172 +1,185 @@
-
 #### ENCE 3100 Lab 5
 Colin McBride
   
-## Part 1:  
+## Part 1: 8-bit Accumulator with BCD Display
+**What it does:** Takes an 8-bit input from switches and continuously adds it to a running sum. Displays the result on 7-segment displays in decimal (BCD format).
+
 Main of part 1
 ```verilog
-	// Part I
-	//******************
-	
-	wire [7:0] w_sum;
-	
-	// ALU - add
-	accumulator_8bit Acc_8bit(
-		.i_A(SW[7:0]),  //8bit
-		.i_clk(w_myClk),
-		.i_rst(SW[9]),
-		.o_overflow(LEDR[8]),
-		.o_S(w_sum) //8bit
-	);
-	
-	assign LEDR[7:0] = w_sum;
-	
-	// Display result in BCD
-	
-	wire [3:0] w_O, w_T, w_H;
-	
-	bin8_to_bcd u_b2b (
-    .bin(w_sum),
-    .bcd_hundreds(w_H),
-    .bcd_tens(w_T),
-    .bcd_ones(w_O)
-	);
-	
-	// BCD to HEX decoders
-	seg7Decoder SEG_O (w_O, HEX0);
-	seg7Decoder SEG_T (w_T, HEX1);
-	seg7Decoder SEG_H (w_H, HEX2);
-```  
-*text blurb*  
-```verilog
-module accumulator_8bit(
-	input 	[7:0] i_A,
-	input 			i_clk,
-	input				i_rst,
-	output 			o_overflow,
-	output 	[7:0] o_S
+// Part I
+//******************
+
+wire [7:0] w_sum;
+
+// ALU - Accumulator that adds SW input to current sum
+accumulator_8bit Acc_8bit(
+    .i_A(SW[7:0]),        // 8-bit input from switches
+    .i_clk(w_myClk),      // Clock signal
+    .i_rst(SW[9]),        // Reset switch clears accumulator
+    .o_overflow(LEDR[8]), // Overflow indicator LED
+    .o_S(w_sum)           // 8-bit sum output
 );
 
+assign LEDR[7:0] = w_sum; // Display sum on LEDs
 
-	wire [7:0] w_A;
-	wire w_overflow;
-	wire [7:0] w_S;
+// Convert binary sum to BCD for 7-segment display
+wire [3:0] w_O, w_T, w_H; // Ones, Tens, Hundreds digits
 
-	reg_nbit #(.N(8)) REG0
-	(
-	i_A,
-	i_clk,
-	i_rst,
-	w_A
-	);
-	
-
-	// 8bit ALU
-	// Now we accumulate
-	assign {w_overflow, w_S} = w_A + o_S;
-	
-	// 1bit Register
-	reg_nbit #(.N(1)) REG1
-	(
-	w_overflow,
-	i_clk,
-	i_rst,
-	o_overflow
-	);
-	// 8bit Register
-	reg_nbit #(.N(8)) REG2
-	(
-	w_S,
-	i_clk,
-	i_rst,
-	o_S
-	);
-endmodule
-```
-## Part 2: 
-Main of part 2:
-```verilog
-// Part II
-	//******************
-
-	
-	wire [7:0] w_sum;
-	
-	// ALU - add and sub
-	accumulator_sub_8bit Acc__sub_8bit(
-		.i_A(SW[7:0]),  		//8bit
-		.i_addsub(SW[8]), 	// 1 - sub / 0 - add
-		.i_clk(w_myClk),
-		.i_rst(SW[9]),
-		.o_overflow(LEDR[8]),
-		.o_S(w_sum) 			//8bit
-	);
-	
-	assign LEDR[7:0] = w_sum;
-	
-	// Display result in BCD
-	
-	wire [3:0] w_O, w_T, w_H;
-	
-	bin8_to_bcd u_b2b (
+bin8_to_bcd u_b2b (
     .bin(w_sum),
     .bcd_hundreds(w_H),
     .bcd_tens(w_T),
     .bcd_ones(w_O)
-	);
-	
-	// BCD to HEX decoders
-	seg7Decoder SEG_O (w_O, HEX0);
-	seg7Decoder SEG_T (w_T, HEX1);
-	seg7Decoder SEG_H (w_H, HEX2);
+);
+
+// Drive 7-segment displays with BCD values
+seg7Decoder SEG_O (w_O, HEX0); // Ones place
+seg7Decoder SEG_T (w_T, HEX1); // Tens place
+seg7Decoder SEG_H (w_H, HEX2); // Hundreds place
 ```
 
-## Part 3:
+**Accumulator Module:**
+```verilog
+module accumulator_8bit(
+    input   [7:0] i_A,
+    input         i_clk,
+    input         i_rst,
+    output        o_overflow,
+    output  [7:0] o_S
+);
+
+    wire [7:0] w_A;
+    wire w_overflow;
+    wire [7:0] w_S;
+
+    // Register to hold input value
+    reg_nbit #(.N(8)) REG0
+    (
+        i_A,
+        i_clk,
+        i_rst,
+        w_A
+    );
+    
+    // Add registered input to current sum (accumulate)
+    assign {w_overflow, w_S} = w_A + o_S;
+    
+    // Register to hold overflow bit
+    reg_nbit #(.N(1)) REG1
+    (
+        w_overflow,
+        i_clk,
+        i_rst,
+        o_overflow
+    );
+    
+    // Register to hold sum (feedback for accumulation)
+    reg_nbit #(.N(8)) REG2
+    (
+        w_S,
+        i_clk,
+        i_rst,
+        o_S
+    );
+endmodule
+```
+
+**How it works:** Input gets registered, added to the current sum, then that new sum is registered and fed back for the next addition. This creates an accumulator that continuously adds new inputs to the running total.
+
+*[INSERT PICTURE/GIF OF WORKING ACCUMULATOR HERE]*
+
+---
+
+## Part 2: Accumulator with Add/Subtract
+**What it does:** Same as Part 1 but SW[8] lets you choose between adding (0) or subtracting (1).
+
+Main of part 2:
+```verilog
+// Part II - Add/Subtract Accumulator
+//******************
+
+wire [7:0] w_sum;
+
+// ALU with add/subtract capability
+accumulator_sub_8bit Acc__sub_8bit(
+    .i_A(SW[7:0]),        // 8-bit input from switches
+    .i_addsub(SW[8]),     // 1 = subtract, 0 = add
+    .i_clk(w_myClk),
+    .i_rst(SW[9]),        // Reset accumulator
+    .o_overflow(LEDR[8]), // Overflow/underflow indicator
+    .o_S(w_sum)           // 8-bit result
+);
+
+assign LEDR[7:0] = w_sum; // Show result on LEDs
+
+// Display result in decimal on 7-segment displays
+wire [3:0] w_O, w_T, w_H;
+
+bin8_to_bcd u_b2b (
+    .bin(w_sum),
+    .bcd_hundreds(w_H),
+    .bcd_tens(w_T),
+    .bcd_ones(w_O)
+);
+
+// BCD to HEX decoders
+seg7Decoder SEG_O (w_O, HEX0);
+seg7Decoder SEG_T (w_T, HEX1);
+seg7Decoder SEG_H (w_H, HEX2);
+```
+
+*[INSERT PICTURE/GIF SHOWING BOTH ADD AND SUBTRACT WORKING]*
+
+---
+
+## Part 3: 4x4 Array Multiplier
+
+**What it does:** Multiplies two 4-bit numbers (A and B) using combinational logic to produce an 8-bit product.
 
 main of part 3:  
-
 ```verilog
-	//******************
-	// Part III
-	//******************	
+//******************
+// Part III - 4x4 Multiplier
+//******************    
 
-	
-	assign HEX3 = 8'b11111111;  // B
-	seg7Decoder SEG_A (SW[3:0], HEX4);  // A
-	seg7Decoder SEG_B (SW[7:4], HEX5);  // B
-	
-	wire [7:0] w_Product;
-	
-	multiplier_4x4 MT_4by4 (
-		.i_A(SW[3:0]),  // 4bits
-		.i_B(SW[7:4]),  // 4bits
-		.o_P(w_Product),  // 8bits
-		.o_Overflow(LEDR[8])
-	);
-	
-	assign LEDR[7:0] = w_Product;
-	
-	// Display result in BCD
-	
-	wire [3:0] w_O, w_T, w_H;
-	
-	bin8_to_bcd u_b2b (
+// Display input values on 7-segment displays
+assign HEX3 = 8'b11111111;          // Blank display
+seg7Decoder SEG_A (SW[3:0], HEX4);  // Display A value
+seg7Decoder SEG_B (SW[7:4], HEX5);  // Display B value
+
+wire [7:0] w_Product;
+
+// 4x4 multiplier: A[3:0] × B[7:4] = Product[7:0]
+multiplier_4x4 MT_4by4 (
+    .i_A(SW[3:0]),        // 4-bit input A
+    .i_B(SW[7:4]),        // 4-bit input B
+    .o_P(w_Product),      // 8-bit product
+    .o_Overflow(LEDR[8])  // Not used (always 0)
+);
+
+assign LEDR[7:0] = w_Product; // Show product in binary on LEDs
+
+// Convert product to decimal for display
+wire [3:0] w_O, w_T, w_H;
+
+bin8_to_bcd u_b2b (
     .bin(w_Product),
     .bcd_hundreds(w_H),
     .bcd_tens(w_T),
     .bcd_ones(w_O)
-	);
-	
-	// BCD to HEX decoders
-	seg7Decoder SEG_O (w_O, HEX0);
-	seg7Decoder SEG_T (w_T, HEX1);
-	seg7Decoder SEG_H (w_H, HEX2);
+);
+
+// Display decimal result on 7-segment displays
+seg7Decoder SEG_O (w_O, HEX0);
+seg7Decoder SEG_T (w_T, HEX1);
+seg7Decoder SEG_H (w_H, HEX2);
 ```
 
 <p align="center">**An array multiplier circuit:**</p>
 
 ![IMG](img/multiply.PNG)
 
+**Multiplier Implementation:**
 ```verilog
 `default_nettype none
 
@@ -177,7 +190,7 @@ module multiplier_4x4(
     output       o_Overflow
 );
 
-    // Partial products
+    // Generate all partial products (AND gates)
     wire a0b0 = i_A[0] & i_B[0];
     wire a1b0 = i_A[1] & i_B[0];
     wire a2b0 = i_A[2] & i_B[0];
@@ -198,52 +211,61 @@ module multiplier_4x4(
     wire a2b3 = i_A[2] & i_B[3];
     wire a3b3 = i_A[3] & i_B[3];
 
-    // Internal wires
+    // Wires for sum and carry propagation through the array
     wire s12, c12, s13, c13, s14, c14;
     wire s22, c22, s23, c23, s24, c24;
     wire s32, c32, s33, c33, s34, c34;
-	 wire c11, c21, c31; 
-    // Row 1
-    assign o_P[0] = a0b0;
+    wire c11, c21, c31; 
+    
+    // Row 1: First level of addition
+    assign o_P[0] = a0b0; // LSB is just the first partial product
     FullAdder fa11(.i_a(a1b0), .i_b(a0b1), .i_cin(1'b0), .o_sum(o_P[1]), .o_cout(c12));
     FullAdder fa12(.i_a(a2b0), .i_b(a1b1), .i_cin(c12), .o_sum(s12), .o_cout(c13));
     FullAdder fa13(.i_a(a3b0), .i_b(a2b1), .i_cin(c13), .o_sum(s13), .o_cout(c14));
-    FullAdder fa14(.i_a(1'b0), .i_b(a3b1), .i_cin(c14), .o_sum(s14), .o_cout(c11)); // c14 cascades
+    FullAdder fa14(.i_a(1'b0), .i_b(a3b1), .i_cin(c14), .o_sum(s14), .o_cout(c11));
 
-    // Row 2
-    FullAdder fa21(.i_a(s12), .i_b(a0b2), .i_cin(1'b0), .o_sum(o_P[2]), .o_cout(c22)); // fixed cin
+    // Row 2: Second level
+    FullAdder fa21(.i_a(s12), .i_b(a0b2), .i_cin(1'b0), .o_sum(o_P[2]), .o_cout(c22));
     FullAdder fa22(.i_a(s13), .i_b(a1b2), .i_cin(c22), .o_sum(s22), .o_cout(c23));
     FullAdder fa23(.i_a(s14), .i_b(a2b2), .i_cin(c23), .o_sum(s23), .o_cout(c24));
-    FullAdder fa24(.i_a(c11), .i_b(a3b2), .i_cin(c24), .o_sum(s24), .o_cout(c21)); // carry cascades
+    FullAdder fa24(.i_a(c11), .i_b(a3b2), .i_cin(c24), .o_sum(s24), .o_cout(c21));
 
-    // Row 3
-    FullAdder fa31(.i_a(s22), .i_b(a0b3), .i_cin(1'b0), .o_sum(o_P[3]), .o_cout(c32)); // fixed cin
+    // Row 3: Final level
+    FullAdder fa31(.i_a(s22), .i_b(a0b3), .i_cin(1'b0), .o_sum(o_P[3]), .o_cout(c32));
     FullAdder fa32(.i_a(s23), .i_b(a1b3), .i_cin(c32), .o_sum(s32), .o_cout(c33));
     FullAdder fa33(.i_a(s24), .i_b(a2b3), .i_cin(c33), .o_sum(s33), .o_cout(c34));
     FullAdder fa34(.i_a(c21), .i_b(a3b3), .i_cin(c34), .o_sum(s34), .o_cout(o_P[7]));
 
-    // Output assembly
+    // Assign final product bits
     assign o_P[4] = s32;
     assign o_P[5] = s33;
     assign o_P[6] = s34;
-    //assign o_P[7] = c34; // final carry
-    assign o_Overflow = 1'b0;
+    // o_P[7] assigned in fa34
+    assign o_Overflow = 1'b0; // No overflow possible with 4x4 mult
 
 endmodule
 
 `default_nettype wire
 ```
-Nightmare to make
-*gif of working multiplier*  
 
-## Part 4: 
+Nightmare to make - the wire naming got really confusing tracking all the carries and sums through the array!
 
+*[INSERT PICTURE/GIF SHOWING MULTIPLIER WORKING - TRY 3×5=15, 7×7=49, ETC.]*
 
-What went wrong. 
-pt 1: In correct output types 
+---
 
-pt 2: Incorrect output types again
+## Part 4: [What was this supposed to be?]
 
-pt 3: my wire naming scheme was so bad I actually got lost trying to build it all leading to errors with certian number values. I tried using GPT to help but it made everything so much worse by insiting on doing it it's own way 
+**Status:** Incomplete - will finish for points recovery
 
-pt 4: 
+---
+
+## Challenges & Lessons Learned:
+
+**Part 1:** Incorrect output types initially - had to fix port declarations
+
+**Part 2:** Same output type issues
+
+**Part 3:** My wire naming scheme was terrible and I got completely lost building the array. Tried using GPT for help but it made everything worse by insisting on its own structure instead of following the array multiplier pattern. Eventually debugged it manually by carefully tracing through the circuit diagram.
+
+**Part 4:** [To be completed]
