@@ -259,7 +259,80 @@ Nightmare to make - the wire naming got really confusing tracking all the carrie
 **What it does:** Implements an 8×8 multiplier using n-bit adders arranged hierarchically (instead of a 2D array of full adders like Part 3). This approach is more scalable and easier to extend to larger bit widths. Both inputs and outputs are registered.
 
 **Key difference from Part 3:** Part 3 used a 2D array of individual full adders. Part 4 abstracts rows of full adders into n-bit adders, creating a cleaner structure that accumulates partial products row-by-row.
+```verilog
+`default_nettype none
 
+module multiplier_8x8_reg(
+    input  [7:0] i_A,
+    input  [7:0] i_B,
+    input        i_clk,
+    output [15:0] o_P
+);
+
+    // Register inputs
+    reg [7:0] r_A, r_B;
+    
+    always @(posedge i_clk) begin
+        r_A <= i_A;
+        r_B <= i_B;
+    end
+    
+    // Generate partial products (AND operations)
+    wire [7:0] pp0 = {8{r_B[0]}} & r_A;
+    wire [7:0] pp1 = {8{r_B[1]}} & r_A;
+    wire [7:0] pp2 = {8{r_B[2]}} & r_A;
+    wire [7:0] pp3 = {8{r_B[3]}} & r_A;
+    wire [7:0] pp4 = {8{r_B[4]}} & r_A;
+    wire [7:0] pp5 = {8{r_B[5]}} & r_A;
+    wire [7:0] pp6 = {8{r_B[6]}} & r_A;
+    wire [7:0] pp7 = {8{r_B[7]}} & r_A;
+    
+    // Adder tree structure
+    wire [8:0] sum1;
+    wire [9:0] sum2;
+    wire [10:0] sum3;
+    wire [11:0] sum4;
+    wire [12:0] sum5;
+    wire [13:0] sum6;
+    wire [14:0] sum7;
+    
+    // First row: pp0[7:1] + pp1
+    assign sum1 = {1'b0, pp0[7:1]} + {1'b0, pp1};
+    
+    // Second row: sum1 + pp2 (shifted)
+    assign sum2 = {1'b0, sum1} + {2'b00, pp2};
+    
+    // Third row: sum2 + pp3 (shifted)
+    assign sum3 = {1'b0, sum2} + {3'b000, pp3};
+    
+    // Fourth row: sum3 + pp4 (shifted)
+    assign sum4 = {1'b0, sum3} + {4'b0000, pp4};
+    
+    // Fifth row: sum4 + pp5 (shifted)
+    assign sum5 = {1'b0, sum4} + {5'b00000, pp5};
+    
+    // Sixth row: sum5 + pp6 (shifted)
+    assign sum6 = {1'b0, sum5} + {6'b000000, pp6};
+    
+    // Seventh row: sum6 + pp7 (shifted)
+    assign sum7 = {1'b0, sum6} + {7'b0000000, pp7};
+    
+    // Assemble final product
+    wire [15:0] w_Product = {sum7, pp0[0]};
+    
+    // Register output
+    reg [15:0] r_Product;
+    
+    always @(posedge i_clk) begin
+        r_Product <= w_Product;
+    end
+    
+    assign o_P = r_Product;
+
+endmodule
+
+`default_nettype wire
+```
 Main of part 4:
 ```verilog
 //******************
